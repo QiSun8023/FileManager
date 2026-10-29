@@ -1,4 +1,5 @@
 const paths={
+ moon:['M20 14.5A8.5 8.5 0 0 1 9.5 4 8.5 8.5 0 1 0 20 14.5'],
  copies:['M8 8h12v12H8z','M16 8V4H4v12h4'],
  repair:['M14.5 6.5a5 5 0 0 0-6.4 6.4L3 18l3 3 5.1-5.1a5 5 0 0 0 6.4-6.4l-3 3-3-3z'],
  trash:['M4 7h16','M9 7V4h6v3','M6 7l1 14h10l1-14','M10 11v6','M14 11v6'],
@@ -14,12 +15,13 @@ export function normalizeDisplay(value={}){if(!value||typeof value!=='object')va
 export function initInterface(){
  const root=document.documentElement,$=id=>document.getElementById(id);let settings;try{settings=normalizeDisplay(JSON.parse(localStorage.getItem('fm.display')||'{}'));}catch{settings=normalizeDisplay();}
  document.querySelectorAll('[data-icon]').forEach(host=>{const svg=document.createElementNS('http://www.w3.org/2000/svg','svg');svg.setAttribute('viewBox',host.dataset.icon==='settings'?'0 0 25 27':'0 0 24 24');svg.setAttribute('fill','none');svg.setAttribute('stroke','currentColor');svg.setAttribute('stroke-width','1.7');svg.setAttribute('stroke-linecap','round');svg.setAttribute('stroke-linejoin','round');svg.setAttribute('aria-hidden','true');for(const d of paths[host.dataset.icon]||[]){const path=document.createElementNS(svg.namespaceURI,'path');path.setAttribute('d',d);svg.append(path);}host.prepend(svg);});
- function repaint(){for(const key of ['blur','floating','glass']){root.dataset[key]=String(settings[key]);$('display-'+key).checked=settings[key];}$('display-glass').disabled=!settings.floating;root.style.setProperty('--ui-scale',String(settings.scale/100));$('display-scale').value=settings.scale;$('display-scale-value').textContent=settings.scale+'%';}
+ function measureChrome(){const scale=settings.scale/100,dock=document.querySelector('.navigation-dock');root.style.setProperty('--nav-space',(dock.getBoundingClientRect().height/scale+10)+'px');const bar=[...document.querySelectorAll('.cleanbar,.trash-actions')].find(e=>e.getBoundingClientRect().height>0);root.style.setProperty('--action-space',bar?(bar.getBoundingClientRect().height/scale+20)+'px':'0px');}
+ function repaint(){for(const key of ['blur','floating','glass']){root.dataset[key]=String(settings[key]);$('display-'+key).checked=settings[key];}$('display-glass').disabled=!settings.floating;root.style.setProperty('--ui-scale',String(settings.scale/100));$('display-scale').value=settings.scale;$('display-scale-value').textContent=settings.scale+'%';requestAnimationFrame(measureChrome);}
  function save(){try{localStorage.setItem('fm.display',JSON.stringify(settings));}catch{}repaint();}
  for(const key of ['blur','floating','glass'])$('display-'+key).addEventListener('change',()=>{settings[key]=$('display-'+key).checked;save();});$('display-scale').addEventListener('input',()=>{settings.scale=Number($('display-scale').value);save();});
  const labels={scan:'重复文件',repair:'文件修复',trash:'回收站',settings:'设置'};
- document.querySelectorAll('[data-tab]').forEach(button=>button.addEventListener('click',()=>{$('page-title').textContent=labels[button.dataset.tab];window.scrollTo({top:0,behavior:'instant'});}));
+ document.querySelectorAll('[data-tab]').forEach(button=>button.addEventListener('click',()=>{root.dataset.page=button.dataset.tab;$('page-title').textContent=labels[button.dataset.tab];requestAnimationFrame(measureChrome);window.scrollTo({top:0,behavior:'instant'});}));
  $('appearance-open').addEventListener('click',()=>$('nav-settings').click());
  document.addEventListener('keydown',event=>{if(event.target.matches('[role=tab]')&&['ArrowLeft','ArrowRight','Home','End'].includes(event.key)){event.preventDefault();const tabs=[...document.querySelectorAll('[role=tab]')],i=tabs.indexOf(event.target);const index=event.key==='Home'?0:event.key==='End'?tabs.length-1:(i+(event.key==='ArrowRight'?1:-1)+tabs.length)%tabs.length;tabs[index].click();tabs[index].focus();}});
- repaint();
+ root.dataset.page='scan';const observer=new ResizeObserver(measureChrome);observer.observe(document.querySelector('.navigation-dock'));document.querySelectorAll('.cleanbar,.trash-actions').forEach(e=>observer.observe(e));window.addEventListener('resize',measureChrome);repaint();
 }

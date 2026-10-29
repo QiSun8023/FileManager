@@ -80,13 +80,16 @@ filemanager_install_live() (
     [ -e "$dg_stage/$dg_item" ] || exit 1
     cp -a "$dg_stage/$dg_item" "$dg_prepared/" || exit 1
   done
-  for dg_item in live-install.sh hot-install.sh update.sh post-install.sh .filemanager-install-token; do
+  for dg_item in live-install.sh hot-install.sh update.sh post-install.sh uninstall.sh .filemanager-install-token; do
     if [ -f "$dg_stage/$dg_item" ]; then cp -a "$dg_stage/$dg_item" "$dg_prepared/" || exit 1; fi
   done
   dg_no_links "$dg_prepared" || exit 1
   rm -f -- "$dg_prepared/action.sh" || exit 1
   set_perm_recursive "$dg_prepared" 0 0 0755 0644 || exit 1
   set_perm "$dg_prepared/bin/filemanager" 0 0 0755 || exit 1
+  for dg_script in update.sh post-install.sh uninstall.sh; do
+    if [ -f "$dg_prepared/$dg_script" ]; then set_perm "$dg_prepared/$dg_script" 0 0 0755 || exit 1; fi
+  done
   dg_expected=$(sed -n 's/^version=//p' "$dg_stage/module.prop")
   dg_info=$("$dg_prepared/bin/filemanager" info e30=) || { dg_say "后端启动检查失败，未切换版本。"; exit 1; }
   printf '%s' "$dg_info" | grep -Fq '"ok":true' || exit 1

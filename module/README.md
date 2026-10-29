@@ -1,4 +1,10 @@
-# 文件管理 v1.7.0 · 新内部标识
+## v1.7.1 更新
+
+扫描结果只保留跨页全选；扫描选项和完整文件信息按需展开。目录选择和明暗模式使用居中悬浮窗口。操作栏始终可见，未选择时按钮置灰，列表底部自动预留操作栏与导航所需空间。修复页仍保留本页/全选。
+
+新增 uninstall.sh。按用户明确选择，卸载将永久删除回收站中的实际文件及恢复记录，并清理私有索引、修复历史、选择、日志和旧模块备份。请先恢复需要的文件；正常目录中的原文件不清理。删除范围仅限本模块私有目录和两个新旧回收站目录，共享父目录有其他文件时保留。活动任务、异常路径或不可用存储会使清理报错并保留无法安全处理的数据；真实手机卸载时机和权限尚未验证。
+
+# 文件管理 v1.7.1 · 新内部标识
 
 本版内部 ID 为 filemanager，程序入口为 `/data/adb/modules/filemanager/bin/filemanager`。原 dupeguard 用户需要手动安装一次本迁移版本；停止任务、关闭旧网页后安装，不要先卸载旧模块。
 
@@ -59,7 +65,7 @@
 
 回收站页面显示位置、总数量和占用容量，每页 50 项。“全选”覆盖全部页面；再次点击取消全部。逐项修改后按钮显示部分选中。恢复和彻底删除处理所有页面所选，翻页不清除勾选。
 
-**移入回收站仍占空间，彻底删除后才释放；不自动清空，卸载模块也保留回收文件及记录。** 恢复不覆盖同名文件，要求原目录仍存在且有足够复制空间。新版回收记录会保留文件修改时间；旧版记录若不含该字段，无法据此补回日期。恢复后重新扫描。
+**移入回收站仍占空间，彻底删除后才释放；不自动清空，卸载模块会彻底删除回收文件、恢复记录和私有历史。** 恢复不覆盖同名文件，要求原目录仍存在且有足够复制空间。新版回收记录会保留文件修改时间；旧版记录若不含该字段，无法据此补回日期。恢复后重新扫描。
 
 ## 文件修复
 
@@ -84,3 +90,11 @@ Monet 读取宿主实际提供的颜色；宿主未提供时明确提示并回�
 验证记录及 SHA-256 随本版提供。源码包包含 Go 后端与测试、WebUI、安装模拟测试和 Windows 构建脚本 build.ps1。本机使用假 Android 目录测试，不能视为手机验证；具体设备对 Android/FileManager 目录的权限限制仍需真机确认。
 
 项目采用 MIT 许可，Go 标准库许可见 GO-LICENSE。安装参考：[KernelSU installer](https://github.com/tiann/KernelSU/blob/main/userspace/ksud/src/installer.sh)、[KernelSU hot install](https://github.com/tiann/KernelSU/blob/main/userspace/ksud/src/hot_install.rs)。
+
+### 卸载补充
+
+KernelSU 实际执行卸载脚本的时机由管理器决定，不能将“点击卸载”视为清理已经完成。共享存储未解锁时，会将清理助手暂存到私有目录并后台等待，最多等待约 30 分钟；解锁后继续清理，成功时连助手本身一并删除。等待超时、权限不足或异常操作锁时保留未完成的数据并输出错误，日志为 `/data/adb/dupeguard/uninstall-cleanup.log`。等待期间重新安装会变更安装标识，使旧清理任务停止。
+
+不会删除 Downloads、录音原目录、其他模块或宿主应用数据；WebUI 宿主自己隔离保存的网页缓存/偏好由宿主管理，不会为了清理本模块而清空整个宿主。旧版没有卸载脚本，须先升级本版才具备此清理功能。
+
+参考：[KernelSU 卸载实现](https://github.com/tiann/KernelSU/blob/main/userspace/ksud/src/module.rs)、[Android CE 存储准备标志](https://android.googlesource.com/platform/frameworks/base/+/android16-release/services/core/java/com/android/server/pm/UserDataPreparer.java)。

@@ -28,7 +28,7 @@ with tempfile.TemporaryDirectory(prefix='filemanager-release-') as directory:
     for name in ('engine/version.go', 'module/webroot/app.js', 'module/customize.sh', 'module/update.sh', 'tests/test-bridge.mjs', 'tests/test-ksu-install.sh'):
         assert new in (target/name).read_text(encoding='utf8'), name
     assert 'v=99.88.77' in (target/'module/webroot/index.html').read_text(encoding='utf8')
-    assert '文件管理 99.88.77 <' in (target/'module/webroot/index.html').read_text(encoding='utf8')
+    assert '文件管理 99.88.77</footer>' in (target/'module/webroot/index.html').read_text(encoding='utf8')
     assert 'id=filemanager\n' in (target/'module/module.prop').read_text(encoding='utf8')
     print('PASS new version synchronizes backend, frontend, installer, tests and pinned update URLs')
 print('Release tooling: 2 scenarios passed.')

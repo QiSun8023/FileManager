@@ -10,3 +10,5 @@ __pycache__/
 
 .migration-tests.*/
 .live-install-tests.*/
+
+.uninstall-tests.*/

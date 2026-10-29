@@ -1,10 +1,16 @@
+## v1.7.1 更新
+
+扫描结果只保留跨页全选；扫描选项和完整文件信息按需展开。目录选择和明暗模式使用居中悬浮窗口。操作栏始终可见，未选择时按钮置灰，列表底部自动预留操作栏与导航所需空间。修复页仍保留本页/全选。
+
+新增 uninstall.sh。按用户明确选择，卸载将永久删除回收站中的实际文件及恢复记录，并清理私有索引、修复历史、选择、日志和旧模块备份。请先恢复需要的文件；正常目录中的原文件不清理。删除范围仅限本模块私有目录和两个新旧回收站目录，共享父目录有其他文件时保留。活动任务、异常路径或不可用存储会使清理报错并保留无法安全处理的数据；真实手机卸载时机和权限尚未验证。
+
 # 文件管理
 
 基于 Root WebUI 的本地文件工具，支持内容查重、文件日期/双后缀修复、跨页批量操作和回收站。v1.6.0 完成系统设置式 WebUI；v1.7.0 将内部模块标识改为 **filemanager**。
 
 ## 下载
 
-在 [Releases](https://github.com/QiSun8023/FileManager/releases) 下载 `FileManager-v1.7.0-arm64.zip`。源码 ZIP 和独立 WebUI ZIP 不能作为模块安装。ARM64、Android 8.0+，通过已开机的 KernelSU 管理器安装。
+在 [Releases](https://github.com/QiSun8023/FileManager/releases) 下载 `FileManager-v1.7.1-arm64.zip`。源码 ZIP 和独立 WebUI ZIP 不能作为模块安装。ARM64、Android 8.0+，通过已开机的 KernelSU 管理器安装。
 
 ## 从旧标识迁移
 
@@ -42,3 +48,11 @@ Linux：`python3 tools/build.py`。工具会测试当前主机上的后端、桥
 [详细功能说明](module/README.md)。MIT，Go 许可见 module/GO-LICENSE。
 
 尚未经过 Android 真机验证。本机测试及安装模拟不代表具体设备上的免重启、迁移、存储权限或 Monet 已验证成功。
+
+### 卸载补充
+
+KernelSU 实际执行卸载脚本的时机由管理器决定，不能将“点击卸载”视为清理已经完成。共享存储未解锁时，会将清理助手暂存到私有目录并后台等待，最多等待约 30 分钟；解锁后继续清理，成功时连助手本身一并删除。等待超时、权限不足或异常操作锁时保留未完成的数据并输出错误，日志为 `/data/adb/dupeguard/uninstall-cleanup.log`。等待期间重新安装会变更安装标识，使旧清理任务停止。
+
+不会删除 Downloads、录音原目录、其他模块或宿主应用数据；WebUI 宿主自己隔离保存的网页缓存/偏好由宿主管理，不会为了清理本模块而清空整个宿主。旧版没有卸载脚本，须先升级本版才具备此清理功能。
+
+参考：[KernelSU 卸载实现](https://github.com/tiann/KernelSU/blob/main/userspace/ksud/src/module.rs)、[Android CE 存储准备标志](https://android.googlesource.com/platform/frameworks/base/+/android16-release/services/core/java/com/android/server/pm/UserDataPreparer.java)。

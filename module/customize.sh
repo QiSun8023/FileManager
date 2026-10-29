@@ -3,8 +3,8 @@
 [ "$ARCH" = arm64 ] || abort "本版本仅支持 ARM64 Android 设备。"
 [ "$API" -ge 26 ] || abort "需要 Android 8.0 或更高版本。"
 set_perm "$MODPATH/bin/filemanager" 0 0 0755
-for DG_SCRIPT in update.sh post-install.sh; do set_perm "$MODPATH/$DG_SCRIPT" 0 0 0755 || abort "设置脚本权限失败。"; done
-ui_print "文件管理 v1.7.0 · KernelSU 免重启适配"
+for DG_SCRIPT in update.sh post-install.sh uninstall.sh; do set_perm "$MODPATH/$DG_SCRIPT" 0 0 0755 || abort "设置脚本权限失败。"; done
+ui_print "文件管理 v1.7.1 · KernelSU 免重启适配"
 if [ "$BOOTMODE" != true ]; then
   ui_print "当前为离线安装，正常启动手机后才能打开模块。"
 else
@@ -20,11 +20,12 @@ else
     kill -0 "$DG_BUSY_PID" 2>/dev/null && abort "文件任务正在运行，请停止或等待完成后重新安装。"
   fi
   DG_INFO=$("$MODPATH/bin/filemanager" info e30=)
-  printf '%s' "$DG_INFO" | grep -Fq '"version":"v1.7.0"' || abort "新版后端不能启动或版本不匹配。"
+  printf '%s' "$DG_INFO" | grep -Fq '"version":"v1.7.1"' || abort "新版后端不能启动或版本不匹配。"
   . "$MODPATH/hot-install.sh" || abort "缺少安装辅助脚本。"
   filemanager_check_existing "$MODPATH" /data/adb/modules/filemanager || abort "已存在其他来源的同标识模块，已取消，避免覆盖。"
   DG_TOKEN=$(cat /proc/sys/kernel/random/uuid)
   case "$DG_TOKEN" in ''|*[!a-zA-Z0-9-]*) abort "无法创建安装标识。" ;; esac
+  [ ! -L /data/adb/dupeguard/install-generation ] && printf '%s' "$DG_TOKEN" > /data/adb/dupeguard/install-generation || abort "不能更新安装标识。"
   printf '%s' "$DG_TOKEN" > "$MODPATH/.filemanager-install-token" || abort "不能保存安装标识。"
   if [ "$(filemanager_mode)" = native ]; then
     MODULE_HOT_INSTALL_REQUEST=true
@@ -52,3 +53,5 @@ ui_print "状态：/data/adb/dupeguard/install-status；日志：install.log。"
 ui_print "保留原有回收站与恢复记录，无需安装额外 APK。"
 
 ui_print "标识已改为 filemanager；沿用原私有数据目录，回收站及修复记录保留。"
+
+ui_print "卸载本模块会彻底删除回收站文件、恢复记录和私有历史，请先恢复需要的文件。"

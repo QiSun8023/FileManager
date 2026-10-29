@@ -41,7 +41,7 @@ def main():
     run([args.go, 'vet', './...'], ROOT/'engine', env)
     for test in ('test-bridge.mjs', 'test-theme.mjs'):
         run([args.node, str(ROOT/'tests'/test)])
-    for test in ('test-live-install.sh', 'test-ksu-install.sh', 'test-legacy-install.sh'):
+    for test in ('test-live-install.sh', 'test-ksu-install.sh', 'test-legacy-install.sh', 'test-uninstall.sh'):
         run([args.bash, str(ROOT/'tests'/test)])
     for path in (ROOT/'module/webroot').glob('*.js'):
         run([args.node, '--check', str(path)])
