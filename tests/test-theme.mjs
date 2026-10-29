@@ -16,4 +16,13 @@ assert.equal(palette['--accent'],'#abc9ff');assert.equal(palette['--card'],'#152
 console.log('PASS complete host palette maps to accent, surfaces, text and selection colors');
 assert.equal(paletteTone('#152015ff'),'dark');assert.equal(paletteTone('rgb(250, 250, 250)'),'light');assert.equal(paletteTone('bad'),null);
 console.log('PASS host palette controls appropriate light/dark native form rendering');
-console.log('Theme: 4 scenarios passed.');
+assert.equal(normalizePreferences({scheme:'black'}).scheme,'black');
+console.log('PASS pure-black mode is retained independently from host Monet colors');
+const uiSource=await readFile(new URL('../module/webroot/ui.js',import.meta.url),'utf8');
+const {normalizeDisplay}=await import(`data:text/javascript;base64,${Buffer.from(uiSource).toString('base64')}`);
+assert.deepEqual(normalizeDisplay(null),{blur:true,floating:true,glass:false,scale:100});
+assert.deepEqual(normalizeDisplay({blur:false,floating:false,glass:true,scale:120}),{blur:false,floating:false,glass:true,scale:120});
+assert.equal(normalizeDisplay({scale:999}).scale,100);
+assert.equal(normalizeDisplay({scale:'120'}).scale,100);
+console.log('PASS stored display preferences reject invalid scale and preserve valid choices');
+console.log('Theme: 6 scenarios passed.');

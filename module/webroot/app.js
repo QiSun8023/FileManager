@@ -1,6 +1,7 @@
-import {createBackend} from './bridge.js?v=1.5.1';
-import {initAppearance} from './theme.js?v=1.5.1';
-import {createDemo} from './demo.js?v=1.5.1';
+import {createBackend} from './bridge.js?v=1.6.0';
+import {initAppearance} from './theme.js?v=1.6.0';
+import {initInterface} from './ui.js?v=1.6.0';
+import {createDemo} from './demo.js?v=1.6.0';
 const $=id=>document.getElementById(id),preview=new URLSearchParams(location.search).get('demo')==='1',connected=!!(window.ksu&&typeof window.ksu.exec==='function')&&!preview;
 const demo=createDemo();let sequence=0,busy=false,running=false,pollPromise=null,lastStatus='',currentJob='';
 let page=0,total=0,scan='',groups=[],dupSummary={},repairPage=0,repairTotal=0,repairScan='',repairItems=[],repairSummary={},repairDirty=false,repairZone='Asia/Shanghai';
@@ -9,8 +10,8 @@ const bytes=n=>{if(!n)return '0 B';const u=['B','KB','MB','GB','TB'],i=Math.min(
 function node(tag,cls,text){const n=document.createElement(tag);if(cls)n.className=cls;if(text!==undefined)n.textContent=text;return n;}
 function note(text){$('notice').textContent=text;$('notice').hidden=!text;}
 function nativeExec(command){return new Promise((resolve,reject)=>{const key=`fm_${Date.now()}_${sequence++}`,timer=setTimeout(()=>{delete window[key];reject(new Error('等待超时，任务可能仍在运行，请稍后查看进度。'));},600000);window[key]=(errno,stdout,stderr)=>{clearTimeout(timer);delete window[key];Number(errno)?reject(new Error(stderr||`执行失败 (${errno})`)):resolve(stdout);};try{window.ksu.exec(command,'{}',key);}catch(e){clearTimeout(timer);delete window[key];reject(e);}});}
-const backend=createBackend(nativeExec,'v1.5.1');
-async function api(action,data={}){if(preview)return demo(action,data);if(!connected)throw new Error('请在 KernelSU 或兼容的 Root WebUI 宿主中打开本模块。');const result=await backend(action,data);$('connection').textContent='已连接 v1.5.1';return result;}
+const backend=createBackend(nativeExec,'v1.6.0');
+async function api(action,data={}){if(preview)return demo(action,data);if(!connected)throw new Error('请在 KernelSU 或兼容的 Root WebUI 宿主中打开本模块。');const result=await backend(action,data);$('connection').textContent='已连接 v1.6.0';return result;}
 function toggleButton(id,label,state,capacity,extra=false){const b=$(id);b.textContent=label;b.dataset.state=state||'off';b.setAttribute('aria-label',label);b.setAttribute('aria-pressed',state==='on'?'true':state==='partial'?'mixed':'false');b.disabled=busy||running||!capacity||extra;}
 function controls(){const locked=busy||running;
  for(const id of ['start','root','repair-root','min','repair-zone','repair-time','repair-rename','repair-preview'])$(id).disabled=locked||(!connected&&!preview);
@@ -52,7 +53,7 @@ for(const [prefix,load]of [['',loadGroups],['repair-',loadRepairs],['trash-',loa
 $('refresh-trash').addEventListener('click',()=>work(loadTrash));
 function dirtyRepair(){repairDirty=true;controls();}
 for(const id of ['repair-time','repair-rename','repair-zone'])$(id).addEventListener('change',dirtyRepair);
-document.querySelectorAll('[data-tab]').forEach(b=>b.addEventListener('click',()=>{document.querySelectorAll('[data-tab]').forEach(t=>{t.classList.toggle('active',t===b);t.setAttribute('aria-selected',String(t===b));});for(const id of ['scan','repair','trash'])$(id+'-panel').hidden=b.dataset.tab!==id;if(!running){if(b.dataset.tab==='repair')work(loadRepairs);if(b.dataset.tab==='trash')work(loadTrash);}}));
+document.querySelectorAll('[data-tab]').forEach(b=>b.addEventListener('click',()=>{document.querySelectorAll('[data-tab]').forEach(t=>{t.classList.toggle('active',t===b);t.setAttribute('aria-selected',String(t===b));});for(const id of ['scan','repair','trash','settings'])$(id+'-panel').hidden=b.dataset.tab!==id;if(!running){if(b.dataset.tab==='repair')work(loadRepairs);if(b.dataset.tab==='trash')work(loadTrash);}}));
 function setPath(id,path){$(id).value=path;$(id).textContent=path;if(id==='repair-root')dirtyRepair();rememberDirectory(id);}
 function rememberDirectory(id){const path=$(id).value;if(!path)return;try{localStorage.setItem('fm.'+id,path);const list=JSON.parse(localStorage.getItem('fm.recent')||'[]');localStorage.setItem('fm.recent',JSON.stringify([path,...list.filter(x=>x!==path)].slice(0,8)));}catch{}renderRecent();}
 function renderRecent(){let list=[];try{list=JSON.parse(localStorage.getItem('fm.recent')||'[]');}catch{}for(const [box,id]of [['recent-scan','root'],['recent-repair','repair-root']]){$(box).replaceChildren();list.slice(0,4).forEach(path=>{const b=node('button','',path.split('/').filter(Boolean).pop()||'内部存储');b.title=path;b.addEventListener('click',()=>setPath(id,path));$(box).append(b);});}}
@@ -62,4 +63,4 @@ async function loadDirectory(path,page=0){const request=++pickerRequest;$('picke
 for(const id of ['root','repair-root'])$(id).addEventListener('click',()=>{pickerTarget=id;$('directory-picker').showModal();loadDirectory($(id).value);});
 $('picker-close').addEventListener('click',()=>{pickerRequest++;$('directory-picker').close();});$('picker-use').addEventListener('click',()=>{setPath(pickerTarget,pickerPath);$('directory-picker').close();});$('picker-prev').addEventListener('click',()=>loadDirectory(pickerPath,pickerPage-1));$('picker-next').addEventListener('click',()=>loadDirectory(pickerPath,pickerPage+1));
 $('connection').textContent=preview?'演示预览':connected?'检测连接':'未连接';if(preview)note('演示数据：可以体验选择和外观，不会修改真实文件。');else if(!connected)note('请在 KernelSU 或兼容的 Root WebUI 宿主中打开本模块。');
-initAppearance();controls();if(connected||preview){poll();setInterval(poll,1800);}document.addEventListener('visibilitychange',()=>{if(!document.hidden)poll();});
+initInterface();initAppearance();controls();if(connected||preview){poll();setInterval(poll,1800);}document.addEventListener('visibilitychange',()=>{if(!document.hidden)poll();});

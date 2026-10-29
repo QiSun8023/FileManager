@@ -3,7 +3,7 @@
 [ "$API" -ge 26 ] || abort "需要 Android 8.0 或更高版本。"
 set_perm "$MODPATH/bin/dupeguard" 0 0 0755
 for DG_SCRIPT in update.sh post-install.sh; do set_perm "$MODPATH/$DG_SCRIPT" 0 0 0755 || abort "设置脚本权限失败。"; done
-ui_print "文件管理 v1.5.1 · KernelSU 免重启适配"
+ui_print "文件管理 v1.6.0 · KernelSU 免重启适配"
 if [ "$BOOTMODE" != true ]; then
   ui_print "当前为离线安装，正常启动手机后才能打开模块。"
 else
@@ -18,7 +18,7 @@ else
     kill -0 "$DG_BUSY_PID" 2>/dev/null && abort "文件任务正在运行，请停止或等待完成后重新安装。"
   fi
   DG_INFO=$("$MODPATH/bin/dupeguard" info e30=)
-  printf '%s' "$DG_INFO" | grep -Fq '"version":"v1.5.1"' || abort "新版后端不能启动或版本不匹配。"
+  printf '%s' "$DG_INFO" | grep -Fq '"version":"v1.6.0"' || abort "新版后端不能启动或版本不匹配。"
   . "$MODPATH/hot-install.sh" || abort "缺少安装辅助脚本。"
   DG_TOKEN=$(cat /proc/sys/kernel/random/uuid)
   case "$DG_TOKEN" in ''|*[!a-zA-Z0-9-]*) abort "无法创建安装标识。" ;; esac

@@ -4,41 +4,63 @@
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; connect-src 'none'; object-src 'none'; base-uri 'none'">
 <meta name="color-scheme" content="light dark"><title>文件管理</title>
-<link rel="stylesheet" href="style.css?v=1.5.1"><script type="module" src="app.js?v=1.5.1"></script>
+<link rel="stylesheet" href="style.css?v=1.6.0"><script type="module" src="app.js?v=1.6.0"></script>
 </head>
 <body>
 <main>
-<header><div class="brand"><span class="mark">文<span>·</span></span><div><strong>文件管理</strong><small>本地文件工具</small></div></div><div class="header-actions"><span class="badge" id="connection">检测连接</span><button id="appearance-open" type="button">外观</button></div></header>
+<header class="app-header"><div class="brand"><span class="eyebrow">文件管理</span><h1 id="page-title">重复文件</h1></div><div class="header-actions"><span class="badge" id="connection">检测连接</span><button id="appearance-open" class="icon-button" type="button" aria-label="外观设置" data-icon="settings"></button></div></header>
 
 <div class="notice" id="notice" role="status" aria-live="polite" hidden></div>
-<div id="task-bar" class="task-bar" hidden><span id="task-message"></span><button id="task-stop" type="button">停止</button></div><nav aria-label="功能"><button class="tab active" data-tab="scan" aria-selected="true">重复文件</button><button class="tab" data-tab="repair" aria-selected="false">文件修复</button><button class="tab" data-tab="trash" aria-selected="false">回收站 <span id="trash-count">0</span></button></nav>
-<section id="scan-panel">
+<div id="task-bar" class="task-bar" hidden><span id="task-message"></span><button id="task-stop" type="button">停止</button></div>
+<section id="scan-panel" role="tabpanel" aria-labelledby="nav-scan">
 <section class="card scan-card"><div class="section-title"><h2>扫描范围</h2><span class="muted">内部共享存储</span></div>
 <div class="presets"><button data-root="/storage/emulated/0/Download">下载</button><button data-root="/storage/emulated/0/DCIM">相机</button><button data-root="/storage/emulated/0/Pictures">图片</button><button data-root="/storage/emulated/0">全部内部存储</button></div>
 <div class="section-title"><label for="root">文件夹路径</label></div><button id="root" class="path-field" type="button" value="/storage/emulated/0/Download" aria-label="扫描文件夹" aria-haspopup="dialog">/storage/emulated/0/Download</button><div id="recent-scan" class="recent-dirs"></div>
 <div class="scan-options"><label for="min">最小文件大小</label><select id="min"><option value="1">全部非空文件</option><option value="102400">100 KB</option><option value="1048576">1 MB</option><option value="10485760">10 MB</option></select></div>
 <p class="hint">自动排除 Android、隐藏目录和符号链接；最多扫描 20 万个文件。</p>
-<div class="scan-actions"><button class="primary" id="start">开始扫描 <span>↗</span></button><button id="cancel" hidden>停止任务</button></div>
+<div class="scan-actions"><button class="primary" id="start">开始扫描</button><button id="cancel" hidden>停止任务</button></div>
 <div class="progress" id="progress" hidden><span></span></div><p id="status" class="hint" aria-live="polite">准备就绪</p></section>
 <div class="stats"><div><span>重复文件组</span><strong id="group-stat">—</strong></div><div><span>扫描时可回收</span><strong id="bytes-stat">—</strong></div></div>
 <section class="results"><div class="section-title"><h2>扫描结果 <small id="result-count"></small></h2></div><div class="selection-tools"><button id="scope-page" class="selection-toggle" aria-pressed="false">仅本页</button><button id="scope-all" class="selection-toggle" aria-pressed="false">全选</button></div><p class="hint">优先保留无副本编号的文件；可手动调整。翻页保留选择，清理时会处理全部所选并自动分批。</p><div id="groups"><div class="empty"><span>⌕</span><h3>从一次扫描开始</h3><p>重复项将在这里按内容分组显示。</p></div></div><div class="pagination"><button id="prev">上一页</button><span id="page">1</span><button id="next">下一页</button></div></section>
 <div class="cleanbar"><div><strong id="selected">未选择文件</strong><small>每组至少保留一份</small></div><button class="primary" id="clean" disabled>移入回收站</button></div>
 </section>
-<section id="repair-panel" hidden>
-<section class="card"><div class="section-title"><h2>恢复文件整理</h2><span class="muted">先预览，再修改</span></div>
+<section id="repair-panel" role="tabpanel" aria-labelledby="nav-repair" hidden>
+<section class="card"><div class="section-title"><h2>修复选项</h2><span class="muted">先预览，再修改</span></div>
 <div class="section-title"><label for="repair-root">修复文件夹路径（包含子目录）</label></div><button id="repair-root" class="path-field" type="button" value="/storage/emulated/0/Download" aria-label="修复文件夹" aria-haspopup="dialog">/storage/emulated/0/Download</button><div id="recent-repair" class="recent-dirs"></div>
-<label class="repair-option"><input type="checkbox" id="repair-time" checked><span><strong>按文件名修正修改时间</strong><small>例如 2025-02-12 14-40-15 → 2025-02-12 14:40:15</small></span></label>
+<label class="repair-option switch-row"><input type="checkbox" role="switch" id="repair-time" checked><span><strong>按文件名修正修改时间</strong><small>例如 2025-02-12 14-40-15 → 2025-02-12 14:40:15</small></span></label>
 <div class="scan-options"><label for="repair-zone">文件名时间所属时区</label><select id="repair-zone"><option value="Asia/Shanghai">北京时间 UTC+08:00</option><option value="UTC">UTC</option><option value="Asia/Tokyo">日本时间</option><option value="America/Los_Angeles">美国洛杉矶</option></select></div>
-<label class="repair-option"><input type="checkbox" id="repair-rename" checked><span><strong>修正 .m4a.aac 双重后缀</strong><small>仅将结尾 .m4a.aac 改成 .aac（忽略大小写）</small></span></label>
+<label class="repair-option switch-row"><input type="checkbox" role="switch" id="repair-rename" checked><span><strong>修正 .m4a.aac 双重后缀</strong><small>仅将结尾 .m4a.aac 改成 .aac（忽略大小写）</small></span></label>
 <p class="hint">只修改文件名和文件修改时间，不转换音频格式。创建时间、录音内嵌日期和应用缓存日期不会因此自动修正。沿用扫描的目录排除规则。</p>
 <button class="primary repair-preview" id="repair-preview">预览修复</button><button id="repair-cancel" hidden>停止预览</button><p id="repair-status" class="hint" aria-live="polite">尚未预览</p>
 </section>
 <section class="results repair-results"><div class="section-title"><h2>待修复 <small id="repair-count"></small></h2></div><div class="selection-tools"><button id="repair-page-toggle" class="selection-toggle" aria-pressed="false">仅本页</button><button id="repair-all-toggle" class="selection-toggle" aria-pressed="false">全选</button></div><p class="hint" id="repair-summary">预览将显示原文件名、新文件名及时间变化；同名冲突会跳过。</p><div id="repair-list"><div class="empty">预览后，在这里核对每项修改。</div></div><div class="pagination"><button id="repair-prev">上一页</button><span id="repair-page">1</span><button id="repair-next">下一页</button></div></section>
 <div class="cleanbar"><div><strong id="repair-selected">未选择文件</strong><small>执行前会再次校验，修复后请重新查重</small></div><button class="primary" id="repair-apply" disabled>执行所选修复</button></div>
 </section>
-<section id="trash-panel" hidden><div class="section-title"><h2>回收站</h2><button id="refresh-trash">刷新</button></div><p class="hint">移入回收站尚不释放空间。确认无误后彻底删除才可释放；不自动清空，卸载模块也保留回收文件。恢复需要足够空间且原目录仍存在，恢复后请重新扫描。</p><div class="trash-summary" id="trash-summary">正在读取回收站…</div><div class="selection-tools"><button id="trash-all-toggle" class="selection-toggle" aria-pressed="false">全选</button></div><div id="trash-list"></div><div class="pagination"><button id="trash-prev">上一页</button><span id="trash-page">1</span><button id="trash-next">下一页</button></div><div class="trash-actions"><span id="trash-selected">未选择文件</span><button id="restore">恢复所选</button><button class="danger" id="purge">彻底删除所选</button></div></section>
-<footer>文件管理 1.5.1 <span>•</span> 完全离线，无后台自启</footer>
-<dialog id="directory-picker"><div class="section-title"><h2>选择文件夹</h2><button id="picker-close" type="button">取消</button></div><div id="picker-breadcrumbs" class="breadcrumbs"></div><p id="picker-path" class="hint"></p><p id="picker-status" class="hint" role="status"></p><div id="picker-list"></div><div class="pagination"><button id="picker-prev">上一页</button><span id="picker-page">1</span><button id="picker-next">下一页</button></div><div class="dialog-actions"><button id="picker-use" class="primary" type="button">选择当前目录</button></div></dialog>
+<section id="trash-panel" role="tabpanel" aria-labelledby="nav-trash" hidden><div class="section-title"><h2>回收站</h2><button id="refresh-trash">刷新</button></div><p class="hint">移入回收站尚不释放空间。确认无误后彻底删除才可释放；不自动清空，卸载模块也保留回收文件。恢复需要足够空间且原目录仍存在，恢复后请重新扫描。</p><div class="trash-summary" id="trash-summary">正在读取回收站…</div><div class="selection-tools"><button id="trash-all-toggle" class="selection-toggle" aria-pressed="false">全选</button></div><div id="trash-list"></div><div class="pagination"><button id="trash-prev">上一页</button><span id="trash-page">1</span><button id="trash-next">下一页</button></div><div class="trash-actions"><span id="trash-selected">未选择文件</span><button id="restore">恢复所选</button><button class="danger" id="purge">彻底删除所选</button></div></section>
+<section id="settings-panel" role="tabpanel" aria-labelledby="nav-settings" hidden>
+<div class="section-label">外观</div><section class="card settings-card">
+<div class="preference-row"><span class="preference-icon" data-icon="sun"></span><div class="preference-copy"><label for="appearance-scheme">明暗模式</label><small>选择适合你的显示方式</small></div><select id="appearance-scheme"><option value="system">跟随系统</option><option value="light">浅色</option><option value="dark">深色</option><option value="black">纯黑</option></select></div>
+<label class="switch-row preference-row"><span class="preference-icon" data-icon="palette"></span><span class="preference-copy"><strong>Monet 动态配色</strong><small>使用 WebUI 宿主提供的主题颜色</small></span><input type="checkbox" role="switch" id="appearance-monet"></label>
+<p id="appearance-status" class="hint theme-status" role="status"></p>
+<div class="palette-section"><div class="preference-copy"><strong>强调色</strong><small>按钮、选择和进度条使用同一配色</small></div><div id="accent-palette" class="accent-palette"></div></div>
+</section>
+<div class="section-label">视觉效果</div><section class="card settings-card">
+<label class="switch-row preference-row"><span class="preference-icon" data-icon="layers"></span><span class="preference-copy"><strong>顶栏与底栏模糊</strong><small>让背景内容柔和透出</small></span><input type="checkbox" role="switch" id="display-blur"></label>
+<label class="switch-row preference-row"><span class="preference-icon" data-icon="dock"></span><span class="preference-copy"><strong>悬浮底栏</strong><small>以圆角面板显示功能导航</small></span><input type="checkbox" role="switch" id="display-floating"></label>
+<label class="switch-row preference-row"><span class="preference-icon" data-icon="glass"></span><span class="preference-copy"><strong>玻璃效果</strong><small>为悬浮底栏增加透明层次</small></span><input type="checkbox" role="switch" id="display-glass"></label>
+</section>
+<div class="section-label">显示</div><section class="card settings-card scale-card"><div class="scale-heading"><div class="preference-copy"><label for="display-scale">界面缩放</label><small>调整文字和控件的显示比例</small></div><output id="display-scale-value" for="display-scale">100%</output></div><input id="display-scale" type="range" min="90" max="120" step="5" value="100" aria-label="界面缩放"></section>
+<div class="section-label">关于</div><section class="card settings-card"><div class="preference-row"><span class="preference-icon" data-icon="folder"></span><div class="preference-copy"><strong>文件管理</strong><small>本地查重、修复与回收站</small></div><span class="version-label">v1.6.0</span></div></section>
+<p class="hint settings-note">外观偏好保存在当前 WebUI 宿主。清除宿主数据后会恢复默认设置。</p>
+</section>
+<footer>文件管理 1.6.0 <span>•</span> 完全离线，无后台自启</footer>
+<dialog id="directory-picker" class="bottom-sheet" aria-labelledby="picker-title"><div class="sheet-handle" aria-hidden="true"></div><div class="section-title"><h2 id="picker-title">选择文件夹</h2><button id="picker-close" type="button">取消</button></div><div id="picker-breadcrumbs" class="breadcrumbs"></div><p id="picker-path" class="hint"></p><p id="picker-status" class="hint" role="status"></p><div id="picker-list"></div><div class="pagination"><button id="picker-prev">上一页</button><span id="picker-page">1</span><button id="picker-next">下一页</button></div><div class="dialog-actions"><button id="picker-use" class="primary" type="button">选择当前目录</button></div></dialog>
 </main>
-<dialog id="confirm"><form method="dialog"><h2 id="confirm-title"></h2><p id="confirm-text"></p><div class="dialog-actions"><button value="cancel">取消</button><button class="primary" value="ok">确认</button></div></form></dialog>
-<dialog id="appearance-dialog"><div class="section-title"><h2>外观</h2><button id="appearance-close" type="button">完成</button></div><label for="appearance-scheme">明暗模式</label><select id="appearance-scheme"><option value="system">跟随系统</option><option value="light">浅色</option><option value="dark">深色</option></select><label class="repair-option"><input type="checkbox" id="appearance-monet"><span><strong>Monet 动态配色</strong><small>使用 WebUI 宿主提供的主题颜色</small></span></label><p id="appearance-status" class="hint" role="status"></p><label>手动强调色</label><div id="accent-palette" class="accent-palette"></div></dialog></body></html>
+<div class="navigation-dock"><nav aria-label="功能" role="tablist" class="bottom-navigation">
+<button id="nav-scan" role="tab" class="tab active" data-tab="scan" aria-controls="scan-panel" aria-selected="true"><span data-icon="copies"></span><span>重复文件</span></button>
+<button id="nav-repair" role="tab" class="tab" data-tab="repair" aria-controls="repair-panel" aria-selected="false"><span data-icon="repair"></span><span>文件修复</span></button>
+<button id="nav-trash" role="tab" class="tab" data-tab="trash" aria-controls="trash-panel" aria-selected="false"><span class="nav-icon" data-icon="trash"><span id="trash-count">0</span></span><span>回收站</span></button>
+<button id="nav-settings" role="tab" class="tab" data-tab="settings" aria-controls="settings-panel" aria-selected="false"><span data-icon="settings"></span><span>设置</span></button>
+</nav></div>
+<dialog id="confirm" class="bottom-sheet confirm-sheet" aria-labelledby="confirm-title"><div class="sheet-handle" aria-hidden="true"></div><form method="dialog"><h2 id="confirm-title"></h2><p id="confirm-text"></p><div class="dialog-actions"><button value="cancel">取消</button><button class="primary" value="ok">确认</button></div></form></dialog>
+</body></html>

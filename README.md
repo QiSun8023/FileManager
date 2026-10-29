@@ -2,6 +2,8 @@
 
 用于 KernelSU / 兼容 Root WebUI 宿主的 ARM64 Android 文件工具。内部模块 ID 固定为 `dupeguard`，显示名称为“文件管理”。
 
+本版重做 WebUI：系统设置式卡片、四项底部导航、底部弹出面板、独立外观设置。文件处理逻辑保持不变。
+
 ## 功能
 
 - 浏览选择目录，按大小和完整 SHA-256 查重；建议保留无编号原文件，支持手动调整。
@@ -19,7 +21,7 @@
 
 **GitHub 自动生成的 Source code ZIP 及本仓库整体压缩包均不是手机安装包**：源码中不提交编译后的后端程序。安装后查看详细说明：[使用说明](module/README.md)。
 
-旧版没有更新地址，需要先手动覆盖安装 v1.5.1 一次。以后 KernelSU 读取模块内的 `updateJson`，发现更大的 `versionCode` 时提供更新。仓库须公开，GitHub 原始文件和 Release 下载地址须可访问；这不需要额外的开机服务或 `action.sh`。
+旧版没有更新地址，需要先手动覆盖安装 v1.6.0 一次。以后 KernelSU 读取模块内的 `updateJson`，发现更大的 `versionCode` 时提供更新。仓库须公开，GitHub 原始文件和 Release 下载地址须可访问；这不需要额外的开机服务或 `action.sh`。
 
 ## 哪些文件需要保留
 
@@ -39,19 +41,19 @@
 
 工具链、Go 缓存、测试临时目录、旧安装包和截图均无需上传源码仓库；安装 ZIP 放在 Releases。当前仓库包已排除这些文件。
 
-## 首次上传与发布 v1.5.1
+## 首次上传与发布 v1.6.0
 
 1. 在 GitHub 创建公开仓库 **QiSun8023/FileManager**，默认分支选择 **main**。
 2. 解压提供的仓库包，上传其中的内容到仓库根目录。应直接看到 `README.md`、`update.json`、`engine/` 和 `module/`，不要再套一层 FileManager 目录。
-3. 在 Releases 创建新发布，标签填写 **v1.5.1**，目标为包含全部源码的提交；上传 **FileManager-v1.5.1-arm64.zip** 作为附件，说明可复制 `CHANGELOG.md`。
+3. 在 Releases 创建新发布，标签填写 **v1.6.0**，目标为包含全部源码的提交；上传 **FileManager-v1.6.0-arm64.zip** 作为附件，说明可复制 `CHANGELOG.md`。
 4. 发布为正常公开 Release；检查下面三个地址均能打开。标签、附件名、JSON 大小写必须一致。不要把 Source code ZIP 填入 `zipUrl`。
-5. 手机手动覆盖安装一次该 v1.5.1 安装包。此时远端也是同版本，不显示新版本提示属于正常情况；需要后续发布更高版本才能验证更新发现。
+5. 手机手动覆盖安装一次该 v1.6.0 安装包。此时远端也是同版本，不显示新版本提示属于正常情况；需要后续发布更高版本才能验证更新发现。
 
 已配置的地址：
 
 - 更新清单：`https://raw.githubusercontent.com/QiSun8023/FileManager/main/update.json`
-- 本版安装包：`https://github.com/QiSun8023/FileManager/releases/download/v1.5.1/FileManager-v1.5.1-arm64.zip`
-- 本版说明：`https://raw.githubusercontent.com/QiSun8023/FileManager/v1.5.1/CHANGELOG.md`
+- 本版安装包：`https://github.com/QiSun8023/FileManager/releases/download/v1.6.0/FileManager-v1.6.0-arm64.zip`
+- 本版说明：`https://raw.githubusercontent.com/QiSun8023/FileManager/v1.6.0/CHANGELOG.md`
 
 仅上传源码不会产生 Release 附件；仍需按上述步骤发布安装附件。
 

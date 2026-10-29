@@ -24,8 +24,8 @@ fixture() {
   printf 'preserve unrelated module' > "$adb/modules/other/user.txt"
   printf 'restore records' > "$data/trash/record.json"
   printf 'repair records' > "$data/repairs/record.json"
-  printf 'id=dupeguard\nversion=v1.5.1\n' > "$stage/module.prop"
-  printf '#!/bin/sh\nprintf '\''{"ok":true,"data":{"version":"v1.5.1"}}\\n'\''\n' > "$stage/bin/dupeguard"
+  printf 'id=dupeguard\nversion=v1.6.0\n' > "$stage/module.prop"
+  printf '#!/bin/sh\nprintf '\''{"ok":true,"data":{"version":"v1.6.0"}}\\n'\''\n' > "$stage/bin/dupeguard"
   chmod 755 "$stage/bin/dupeguard"
   printf 'new-page' > "$stage/webroot/index.html"
   printf 'new-js' > "$stage/webroot/app.js"
@@ -45,7 +45,7 @@ kept_records() {
 }
 published() {
   [ "$(cat "$active/webroot/index.html")" = new-page ] || fail 'page not activated'
-  "$active/bin/dupeguard" info e30= | grep -Fq '"version":"v1.5.1"' || fail 'backend not activated'
+  "$active/bin/dupeguard" info e30= | grep -Fq '"version":"v1.6.0"' || fail 'backend not activated'
   [ ! -d "$data/lock" ] || fail 'installer lock leaked'
   [ ! -e "$adb/modules/.dupeguard-live-$$" ] || fail 'prepared directory leaked'
   [ ! -e "$data/.dupeguard-backup-$$" ] || fail 'backup directory leaked'

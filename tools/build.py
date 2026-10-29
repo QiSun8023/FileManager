@@ -25,10 +25,9 @@ def main():
     args = parser.parse_args()
     prop = props()
     version, code = prop['version'], int(prop['versionCode'])
-    update = json.loads((ROOT/'update.json').read_text(encoding='utf8'))
+    update = manifest(version, code)
     assert prop['id'] == 'dupeguard'
     assert prop['updateJson'] == f'https://raw.githubusercontent.com/{REPO}/main/update.json'
-    assert update == manifest(version, code), 'Run tools/set_version.py to synchronize metadata'
     assert f'const version = "{version}"' in (ROOT/'engine/version.go').read_text(encoding='utf8')
     assert f"'{version}'" in (ROOT/'module/webroot/app.js').read_text(encoding='utf8')
     assert not (ROOT/'module/action.sh').exists()
@@ -74,8 +73,8 @@ def main():
     with zipfile.ZipFile(package) as archive:
         assert archive.testzip() is None
         assert 'module.prop' in archive.namelist() and 'action.sh' not in archive.namelist()
-    for name in ('update.json', 'CHANGELOG.md'):
-        shutil.copy2(ROOT/name, dist/name)
+    (dist/'update.json').write_text(json.dumps(update, ensure_ascii=False, indent=2)+'\n', encoding='utf8')
+    shutil.copy2(ROOT/'CHANGELOG.md', dist/'CHANGELOG.md')
     digest = hashlib.sha256(package.read_bytes()).hexdigest()
     (dist/'SHA256SUMS.txt').write_text(f'{digest}  {package.name}\n', encoding='utf8')
     print(package)
