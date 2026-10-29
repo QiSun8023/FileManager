@@ -24,6 +24,7 @@ fixture() {
   printf 'preserve unrelated module' > "$adb/modules/other/user.txt"
   printf 'restore records' > "$data/trash/record.json"
   printf 'repair records' > "$data/repairs/record.json"
+  printf 'QiSun8023/FileManager' > "$stage/filemanager-origin"
   printf 'id=filemanager\nversion=v1.7.0\n' > "$stage/module.prop"
   printf '#!/bin/sh\nprintf '\''{"ok":true,"data":{"version":"v1.7.0"}}\\n'\''\n' > "$stage/bin/filemanager"
   chmod 755 "$stage/bin/filemanager"

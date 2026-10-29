@@ -76,7 +76,7 @@ filemanager_install_live() (
   dg_owned_prepared=1
   # Preserve unrecognised module-root files; records live outside this directory.
   if [ -d "$dg_active" ]; then cp -a "$dg_active/." "$dg_prepared/" || exit 1; fi
-  for dg_item in bin webroot module.prop skip_mount LICENSE GO-LICENSE; do
+  for dg_item in bin webroot module.prop skip_mount LICENSE GO-LICENSE filemanager-origin; do
     [ -e "$dg_stage/$dg_item" ] || exit 1
     cp -a "$dg_stage/$dg_item" "$dg_prepared/" || exit 1
   done

@@ -22,6 +22,7 @@ else
   DG_INFO=$("$MODPATH/bin/filemanager" info e30=)
   printf '%s' "$DG_INFO" | grep -Fq '"version":"v1.7.0"' || abort "新版后端不能启动或版本不匹配。"
   . "$MODPATH/hot-install.sh" || abort "缺少安装辅助脚本。"
+  filemanager_check_existing "$MODPATH" /data/adb/modules/filemanager || abort "已存在其他来源的同标识模块，已取消，避免覆盖。"
   DG_TOKEN=$(cat /proc/sys/kernel/random/uuid)
   case "$DG_TOKEN" in ''|*[!a-zA-Z0-9-]*) abort "无法创建安装标识。" ;; esac
   printf '%s' "$DG_TOKEN" > "$MODPATH/.filemanager-install-token" || abort "不能保存安装标识。"

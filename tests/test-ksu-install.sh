@@ -16,6 +16,8 @@ fixture() {
   mkdir -p "$data/trash" "$data/repairs" "$stage/bin" "$stage/webroot" "$active/bin" "$active/webroot" "$adb/modules_update/other"
   printf 'restore-data' > "$data/trash/keep"; printf 'repair-data' > "$data/repairs/keep"
   printf 'other-module' > "$adb/modules_update/other/keep"
+  printf 'QiSun8023/FileManager' > "$stage/filemanager-origin"
+  printf 'QiSun8023/FileManager' > "$active/filemanager-origin"
   printf 'id=filemanager\nversion=v1.7.0\n' > "$stage/module.prop"
   printf '#!/bin/sh\nprintf '\''{"ok":true,"data":{"version":"v1.7.0"}}\\n'\''\n' > "$stage/bin/filemanager"; chmod 755 "$stage/bin/filemanager"
   printf new-page > "$stage/webroot/index.html"; printf new-code > "$stage/webroot/app.js"

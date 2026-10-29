@@ -1,4 +1,13 @@
 #!/system/bin/sh
+filemanager_check_existing() {
+  fm_check_stage=$1; fm_check_active=$2
+  [ "$fm_check_stage" = "$fm_check_active" ] && return 0
+  if [ -e "$fm_check_active" ] || [ -L "$fm_check_active" ]; then
+    [ -d "$fm_check_active" ] && [ ! -L "$fm_check_active" ] && [ "$(readlink -f "$fm_check_active")" = "$fm_check_active" ] || return 1
+    [ -f "$fm_check_active/filemanager-origin" ] && [ ! -L "$fm_check_active/filemanager-origin" ] || return 1
+    [ "$(cat "$fm_check_active/filemanager-origin")" = QiSun8023/FileManager ] || return 1
+  fi
+}
 # Keep the historical data location so all existing indexes and records are reused.
 # Retire only the verified legacy module after the new backend is ready.
 filemanager_retire_legacy() (

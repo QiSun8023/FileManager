@@ -55,4 +55,10 @@ chmod 755 "$active/bin/filemanager"; printf page > "$active/webroot/index.html"
 filemanager_ready "$active" "$data" v1.7.0
 [ "$(head -n 1 "$data/install-status")" = ready ]; [ ! -e "$old" ]; [ -f "$data/legacy-module-dupeguard/bin/dupeguard" ]; preserved
 echo 'PASS readiness callback backs up the old module before reporting ready'
-echo 'Legacy migration: 9 scenarios passed (simulation, no Android device).'
+fixture
+if filemanager_check_existing "$adb/modules_update/filemanager" "$active"; then exit 1; fi
+printf 'QiSun8023/FileManager' > "$active/filemanager-origin"
+filemanager_check_existing "$adb/modules_update/filemanager" "$active"
+preserved
+echo 'PASS foreign module identity is rejected; project origin marker permits upgrades'
+echo 'Legacy migration: 10 scenarios passed (simulation, no Android device).' 
