@@ -1,14 +1,14 @@
 #!/system/bin/sh
 # Sourced by customize.sh. Publish this data-only module without a reboot.
 # The three paths must be siblings under the same canonical adb directory.
-dupeguard_install_live() (
+filemanager_install_live() (
   dg_stage=$1
   dg_active=$2
   dg_data=$3
   dg_adb=${dg_data%/*}
   dg_nonce=$$
-  dg_prepared="$dg_adb/modules/.dupeguard-live-$dg_nonce"
-  dg_backup="$dg_data/.dupeguard-backup-$dg_nonce"
+  dg_prepared="$dg_adb/modules/.filemanager-live-$dg_nonce"
+  dg_backup="$dg_data/.filemanager-backup-$dg_nonce"
   dg_owned_lock=0
   dg_published=0
   dg_owned_prepared=0
@@ -41,13 +41,13 @@ dupeguard_install_live() (
     fi
   }
   # Fail before any mutation when paths are outside the expected layout.
-  [ "$dg_stage" = "$dg_adb/modules_update/dupeguard" ] || exit 1
-  [ "$dg_active" = "$dg_adb/modules/dupeguard" ] || exit 1
+  [ "$dg_stage" = "$dg_adb/modules_update/filemanager" ] || exit 1
+  [ "$dg_active" = "$dg_adb/modules/filemanager" ] || exit 1
   [ "$dg_data" = "$dg_adb/dupeguard" ] || exit 1
   dg_canonical "$dg_adb" && dg_canonical "$dg_stage" || exit 1
   dg_no_links "$dg_stage" || { dg_say "安装包包含符号链接，已取消。"; exit 1; }
-  [ "$(sed -n 's/^id=//p' "$dg_stage/module.prop")" = dupeguard ] || exit 1
-  [ -f "$dg_stage/bin/dupeguard" ] && [ -f "$dg_stage/webroot/index.html" ] || exit 1
+  [ "$(sed -n 's/^id=//p' "$dg_stage/module.prop")" = filemanager ] || exit 1
+  [ -f "$dg_stage/bin/filemanager" ] && [ -f "$dg_stage/webroot/index.html" ] || exit 1
   if [ -e "$dg_active" ] || [ -L "$dg_active" ]; then
     dg_canonical "$dg_active" && dg_no_links "$dg_active" || { dg_say "旧模块目录包含链接，已取消。"; exit 1; }
     [ -d "$dg_active" ] || exit 1
@@ -80,15 +80,15 @@ dupeguard_install_live() (
     [ -e "$dg_stage/$dg_item" ] || exit 1
     cp -a "$dg_stage/$dg_item" "$dg_prepared/" || exit 1
   done
-  for dg_item in live-install.sh hot-install.sh update.sh post-install.sh .dupeguard-install-token; do
+  for dg_item in live-install.sh hot-install.sh update.sh post-install.sh .filemanager-install-token; do
     if [ -f "$dg_stage/$dg_item" ]; then cp -a "$dg_stage/$dg_item" "$dg_prepared/" || exit 1; fi
   done
   dg_no_links "$dg_prepared" || exit 1
   rm -f -- "$dg_prepared/action.sh" || exit 1
   set_perm_recursive "$dg_prepared" 0 0 0755 0644 || exit 1
-  set_perm "$dg_prepared/bin/dupeguard" 0 0 0755 || exit 1
+  set_perm "$dg_prepared/bin/filemanager" 0 0 0755 || exit 1
   dg_expected=$(sed -n 's/^version=//p' "$dg_stage/module.prop")
-  dg_info=$("$dg_prepared/bin/dupeguard" info e30=) || { dg_say "后端启动检查失败，未切换版本。"; exit 1; }
+  dg_info=$("$dg_prepared/bin/filemanager" info e30=) || { dg_say "后端启动检查失败，未切换版本。"; exit 1; }
   printf '%s' "$dg_info" | grep -Fq '"ok":true' || exit 1
   printf '%s' "$dg_info" | grep -Fq "\"version\":\"$dg_expected\"" || { dg_say "后端版本不匹配，未切换版本。"; exit 1; }
   if [ -d "$dg_active" ]; then dg_owned_backup=1; mv -- "$dg_active" "$dg_backup" || exit 1; fi

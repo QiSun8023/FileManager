@@ -47,7 +47,7 @@ def main():
             if path.name == 'index.html':
                 text = text.replace(f'文件管理 {old[1:]} <', f'文件管理 {args.version[1:]} <')
             path.write_text(text, encoding='utf8', newline='\n')
-    (ROOT/'update.json').write_text(json.dumps(manifest(args.version, args.version_code), ensure_ascii=False, indent=2)+'\n', encoding='utf8', newline='\n')
+    (ROOT/'update-filemanager.json').write_text(json.dumps(manifest(args.version, args.version_code), ensure_ascii=False, indent=2)+'\n', encoding='utf8', newline='\n')
     print(f'Prepared {args.version} ({args.version_code}). Edit CHANGELOG.md before committing and tagging.')
 
 

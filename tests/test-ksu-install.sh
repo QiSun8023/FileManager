@@ -12,17 +12,17 @@ set_perm_recursive() { find "$1" -type d -exec chmod "$4" {} +; find "$1" -type 
 fail() { echo "FAIL: $*" >&2; exit 1; }
 count=0
 fixture() {
-  count=$((count+1)); adb="$test_root/case-$count/adb"; data="$adb/dupeguard"; active="$adb/modules/dupeguard"; stage="$adb/modules_update/dupeguard"
+  count=$((count+1)); adb="$test_root/case-$count/adb"; data="$adb/dupeguard"; active="$adb/modules/filemanager"; stage="$adb/modules_update/filemanager"
   mkdir -p "$data/trash" "$data/repairs" "$stage/bin" "$stage/webroot" "$active/bin" "$active/webroot" "$adb/modules_update/other"
   printf 'restore-data' > "$data/trash/keep"; printf 'repair-data' > "$data/repairs/keep"
   printf 'other-module' > "$adb/modules_update/other/keep"
-  printf 'id=dupeguard\nversion=v1.6.0\n' > "$stage/module.prop"
-  printf '#!/bin/sh\nprintf '\''{"ok":true,"data":{"version":"v1.6.0"}}\\n'\''\n' > "$stage/bin/dupeguard"; chmod 755 "$stage/bin/dupeguard"
+  printf 'id=filemanager\nversion=v1.7.0\n' > "$stage/module.prop"
+  printf '#!/bin/sh\nprintf '\''{"ok":true,"data":{"version":"v1.7.0"}}\\n'\''\n' > "$stage/bin/filemanager"; chmod 755 "$stage/bin/filemanager"
   printf new-page > "$stage/webroot/index.html"; printf new-code > "$stage/webroot/app.js"
   for n in action.sh skip_mount LICENSE GO-LICENSE; do printf new > "$stage/$n"; done
   for n in hot-install.sh live-install.sh update.sh post-install.sh; do cp "$project/module/$n" "$stage/$n"; done
-  printf token-one > "$stage/.dupeguard-install-token"
-  printf old-code > "$active/bin/dupeguard"; printf old-page > "$active/webroot/index.html"
+  printf token-one > "$stage/.filemanager-install-token"
+  printf old-code > "$active/bin/filemanager"; printf old-page > "$active/webroot/index.html"
   # Emulate metadata that KernelSU writes after customize.sh returns.
   cp "$stage/module.prop" "$active/module.prop"; touch "$active/update"
 }
@@ -41,21 +41,21 @@ ready() {
 }
 
 KSU=true; KSU_HAS_HOT_INSTALL=true
-[ "$(dupeguard_mode)" = native ] || fail 'native detection'
+[ "$(filemanager_mode)" = native ] || fail 'native detection'
 unset KSU_HAS_HOT_INSTALL
-[ "$(dupeguard_mode)" = deferred ] || fail 'older KernelSU was skipped'
-KSU=''; [ "$(dupeguard_mode)" = deferred ] || fail 'Magisk fallback'
+[ "$(filemanager_mode)" = deferred ] || fail 'older KernelSU was skipped'
+KSU=''; [ "$(filemanager_mode)" = deferred ] || fail 'Magisk fallback'
 printf 'PASS native KernelSU, older KernelSU and Magisk mode selection\n'
 
 fixture
-dupeguard_deferred_update "$stage" "$active" "$data" v1.6.0 token-one 0 0 || fail 'deferred update'
+filemanager_deferred_update "$stage" "$active" "$data" v1.7.0 token-one 0 0 || fail 'deferred update'
 ready
 printf 'PASS older KernelSU publishes WebUI and clears only its own pending files\n'
 
 fixture
 sleep 0.8 & installer=$!
 sleep 1.4 & parent=$!
-dupeguard_deferred_update "$stage" "$active" "$data" v1.6.0 token-one "$installer" "$parent" > "$test_root/wait.log" 2>&1 & updater=$!
+filemanager_deferred_update "$stage" "$active" "$data" v1.7.0 token-one "$installer" "$parent" > "$test_root/wait.log" 2>&1 & updater=$!
 sleep 0.3
 [ "$(cat "$active/webroot/index.html")" = old-page ] || fail 'published before installer finished'
 wait "$installer"; sleep 0.2
@@ -66,28 +66,28 @@ printf 'PASS waits for both installer shell and finishing ksud process\n'
 
 fixture
 printf 'version=v1.2.0\n' > "$active/module.prop"
-if dupeguard_deferred_update "$stage" "$active" "$data" v1.6.0 token-one 0 0; then fail 'unfinished installer accepted'; fi
+if filemanager_deferred_update "$stage" "$active" "$data" v1.7.0 token-one 0 0; then fail 'unfinished installer accepted'; fi
 [ "$(cat "$active/webroot/index.html")" = old-page ] || fail 'unfinished install replaced old page'
 [ -d "$stage" ] || fail 'unfinished install removed staging'
 kept
 printf 'PASS failed/incomplete installer is not falsely activated\n'
 
 fixture
-if dupeguard_deferred_update "$stage" "$active" "$data" v1.6.0 wrong-token 0 0; then fail 'stale token accepted'; fi
+if filemanager_deferred_update "$stage" "$active" "$data" v1.7.0 wrong-token 0 0; then fail 'stale token accepted'; fi
 [ "$(cat "$active/webroot/index.html")" = old-page ] || fail 'stale update changed active module'
 kept
 printf 'PASS stale worker cannot publish a different installation\n'
 
 fixture
 mkdir "$data/lock"; printf '%s' "$$" > "$data/lock/pid"
-if dupeguard_deferred_update "$stage" "$active" "$data" v1.6.0 token-one 0 0; then fail 'busy update accepted'; fi
+if filemanager_deferred_update "$stage" "$active" "$data" v1.7.0 token-one 0 0; then fail 'busy update accepted'; fi
 [ "$(cat "$active/webroot/index.html")" = old-page ] || fail 'busy update changed active module'
 kept
 printf 'PASS busy file operation remains protected\n'
 
 fixture
 cp -a "$stage/." "$active/"
-dupeguard_ready "$active" "$data" v1.6.0 || fail 'native callback'
+filemanager_ready "$active" "$data" v1.7.0 || fail 'native callback'
 [ "$(head -n 1 "$data/install-status")" = ready ] || fail 'native status'
 [ ! -e "$active/update" ] || fail 'native own flag not cleared'
 [ ! -e "$active/action.sh" ] || fail 'native callback kept old action entry'
@@ -96,7 +96,7 @@ printf 'PASS native hot-install callback validates backend and WebUI\n'
 
 fixture
 cp -a "$stage/." "$active/"
-dupeguard_deferred_update "$active" "$active" "$data" v1.6.0 token-one 0 0 || fail 'direct install'
+filemanager_deferred_update "$active" "$active" "$data" v1.7.0 token-one 0 0 || fail 'direct install'
 [ -f "$active/webroot/index.html" ] && [ ! -e "$active/update" ] || fail 'direct install damaged live files'
 kept
 printf 'PASS manager installing directly into live directory is supported\n'

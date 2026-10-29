@@ -1,20 +1,10 @@
-# 文件管理 v1.6.0
+# 文件管理 v1.7.0 · 新内部标识
 
-适用于 ARM64、Android 8.0 及以上，保留 KernelSU 免重启适配。当前版本已完成本机功能测试和安装模拟，尚未经过 Android 真机安装、Android 目录读写、SELinux 与真实 Root WebUI 验证。
+本版内部 ID 为 filemanager，程序入口为 `/data/adb/modules/filemanager/bin/filemanager`。原 dupeguard 用户需要手动安装一次本迁移版本；停止任务、关闭旧网页后安装，不要先卸载旧模块。
 
-## 安装、升级和入口
+新程序检查通过后才退休旧入口，并将旧模块目录保留在 `/data/adb/dupeguard/legacy-module-dupeguard`。私有记录仍复用 `/data/adb/dupeguard`，回收站和恢复记录路径不变。这样保留历史数据和共用操作锁，无需迁移数据内容。新标识后续更新从 update-filemanager.json 获取，旧标识渠道留在 v1.6.0。
 
-1. 先停止旧版扫描、清理、修复、恢复等任务，并关闭旧网页。
-2. 在 KernelSU 中覆盖安装 `FileManager-v1.6.0-arm64.zip`。内部模块 ID 仍为 `dupeguard`，显示名称改为“文件管理”，无需先卸载。
-3. 原生支持热安装时使用 KernelSU 官方接口；其他受支持的安装流程在安装器退出后由短期后台任务发布程序与 webroot。等待数秒，刷新模块列表后打开 WebUI。
-4. 成功连接时显示“已连接 v1.6.0”。没有“操作”按钮是本版的预期行为：action.sh 已移除，升级和原生热安装回调也会删除旧脚本。
-5. 安装状态保存在 `/data/adb/dupeguard/install-status`，延后安装日志为 `/data/adb/dupeguard/install.log`。状态 ready 才表示发布校验完成；等待或失败不等于安装生效。离线安装须正常启动后使用。
-
-Magisk 用户仍可通过兼容的 KsuWebUI 宿主打开。模块无开机扫描、自动清理、定时任务、外部联网或常驻 HTTP 服务；扫描和批量操作仅在手动启动后后台运行。Monet 仅读取 WebUI 宿主本地提供的主题。
-
-## 在线更新
-
-本版已配置 `https://raw.githubusercontent.com/QiSun8023/FileManager/main/update.json`。需要先建立公开仓库，上传更新清单，并在 GitHub Releases 发布清单对应的安装包，KernelSU 才能检查和下载后续更新。旧版未配置更新链接，需要手动覆盖安装本版一次。`update.sh` 是安装发布辅助脚本，与在线更新清单不是同一个文件，不可删除。
+本迁移包仅在已开机的管理器中安装。旧任务运行、待安装目录、身份/路径不符和备份冲突会阻止旧模块退休，原数据保留。新模块按 ID 隔离的网页偏好可能重置。新旧并存或状态异常时先检查安装日志，不要同时开启两个界面。
 
 ## 目录选择
 

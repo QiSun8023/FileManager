@@ -7,3 +7,6 @@ __pycache__/
 .DS_Store
 .ksu-tests.*/
 .live-tests.*/
+
+.migration-tests.*/
+.live-install-tests.*/

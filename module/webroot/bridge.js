@@ -8,7 +8,7 @@ function encoded(data) {
 
 export function createBackend(exec, expectedVersion) {
   async function execute(action,data) {
-    const raw = await exec(`/data/adb/modules/dupeguard/bin/dupeguard ${action} '${encoded(data)}'`);
+    const raw = await exec(`/data/adb/modules/filemanager/bin/filemanager ${action} '${encoded(data)}'`);
     let response;
     try { response=JSON.parse(raw); } catch { throw new Error('后端响应无效，请关闭旧网页并重新打开模块。'); }
     if(!response.ok) throw new Error(response.error||'操作失败');
