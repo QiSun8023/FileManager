@@ -4,7 +4,7 @@
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; connect-src 'none'; object-src 'none'; base-uri 'none'">
 <meta name="color-scheme" content="light dark"><title>文件管理</title>
-<link rel="stylesheet" href="style.css?v=1.7.2"><script type="module" src="app.js?v=1.7.2"></script>
+<link rel="stylesheet" href="style.css?v=1.7.3"><script type="module" src="app.js?v=1.7.3"></script>
 </head>
 <body>
 <main>
@@ -12,7 +12,8 @@
 
 <div class="notice" id="notice" role="status" aria-live="polite" hidden></div>
 <div id="task-bar" class="task-bar" hidden><span id="task-message"></span><button id="task-stop" type="button">停止</button></div>
-<section id="scan-panel" role="tabpanel" aria-labelledby="nav-scan">
+<div id="file-functions" class="function-switch" role="group" aria-label="重复文件工具"><button id="function-scan" type="button" data-function="scan" aria-pressed="true">内容查重</button><button id="function-repair" type="button" data-function="repair" aria-pressed="false"><span data-icon="repair"></span>文件修复</button></div>
+<section id="scan-panel" role="tabpanel" aria-labelledby="function-scan">
 <section class="card scan-card"><div class="section-title"><h2>扫描范围</h2><span class="muted">内部共享存储</span></div>
 
 <div class="section-title"><label for="root">文件夹路径</label></div><button id="root" class="path-field" type="button" value="/storage/emulated/0/Download" aria-label="扫描文件夹" aria-haspopup="dialog">/storage/emulated/0/Download</button><div id="recent-scan" class="recent-dirs"></div>
@@ -20,11 +21,11 @@
 <p class="hint">自动排除 Android、隐藏目录和符号链接；最多扫描 20 万个文件。</p>
 </details><div class="scan-actions"><button class="primary" id="start">开始扫描</button><button id="cancel" hidden>停止任务</button></div>
 <div class="progress" id="progress" hidden><span></span></div><p id="status" class="hint" aria-live="polite">准备就绪</p></section>
-<div class="stats summary-line"><span>重复组 <strong id="group-stat">—</strong></span><span class="stat-dot">·</span><span>可回收 <strong id="bytes-stat">—</strong></span></div>
+<div class="stats"><div><span>重复组</span><strong id="group-stat">—</strong></div><div><span>可回收</span><strong id="bytes-stat">—</strong></div></div>
 <section class="results"><div class="section-title"><h2>扫描结果 <small id="result-count"></small></h2></div><div class="selection-tools"><button id="scope-all" class="selection-toggle" aria-pressed="false">全选</button></div><p class="hint">全选建议副本，每组至少保留一份。</p><div id="groups"><div class="empty"><span>⌕</span><h3>从一次扫描开始</h3><p>重复项将在这里按内容分组显示。</p></div></div><div class="pagination"><button id="prev">上一页</button><span id="page">1</span><button id="next">下一页</button></div></section>
 <div class="cleanbar" hidden><div><strong id="selected">未选择文件</strong></div><button class="primary" id="clean" disabled>移入回收站</button></div>
 </section>
-<section id="repair-panel" role="tabpanel" aria-labelledby="nav-repair" hidden>
+<section id="repair-panel" role="tabpanel" aria-labelledby="function-repair" hidden>
 <section class="card"><div class="section-title"><h2>修复选项</h2><span class="muted">先预览，再修改</span></div>
 <div class="section-title"><label for="repair-root">修复文件夹</label></div><button id="repair-root" class="path-field" type="button" value="/storage/emulated/0/Download" aria-label="修复文件夹" aria-haspopup="dialog">/storage/emulated/0/Download</button><div id="recent-repair" class="recent-dirs"></div>
 <label class="repair-option switch-row"><input type="checkbox" role="switch" id="repair-time" checked><span><strong>按文件名修正修改时间</strong><small>例如 2025-02-12 14-40-15 → 2025-02-12 14:40:15</small></span></label>
@@ -41,7 +42,7 @@
 <div class="section-label">外观</div><section class="card settings-card">
 <div class="preference-row"><span class="preference-icon" data-icon="sun"></span><div class="preference-copy"><label for="appearance-scheme">明暗模式</label><small></small></div><button id="appearance-scheme" class="preference-value" type="button" aria-haspopup="dialog" value="system">跟随系统</button></div>
 <label class="switch-row preference-row"><span class="preference-icon" data-icon="palette"></span><span class="preference-copy"><strong>Monet 动态配色</strong><small>使用 WebUI 宿主提供的主题颜色</small></span><input type="checkbox" role="switch" id="appearance-monet"></label>
-<p id="appearance-status" class="hint theme-status" role="status"></p>
+<p id="appearance-status" class="hint theme-status" role="status"></p><button id="appearance-retry" class="theme-retry" type="button" hidden>重新读取配色</button>
 <div class="palette-section"><div class="preference-copy"><strong>强调色</strong></div><div id="accent-palette" class="accent-palette"></div></div>
 </section>
 <details class="disclosure more-display"><summary>更多显示设置</summary><div class="section-label">视觉效果</div><section class="card settings-card">
@@ -50,15 +51,14 @@
 <label class="switch-row preference-row"><span class="preference-icon" data-icon="glass"></span><span class="preference-copy"><strong>玻璃效果</strong><small>为悬浮底栏增加透明层次</small></span><input type="checkbox" role="switch" id="display-glass"></label>
 </section>
 <div class="section-label">显示</div><section class="card settings-card scale-card"><div class="scale-heading"><div class="preference-copy"><label for="display-scale">界面缩放</label><small>调整文字和控件的显示比例</small></div><output id="display-scale-value" for="display-scale">100%</output></div><input id="display-scale" type="range" min="90" max="120" step="5" value="100" aria-label="界面缩放"></section>
-</details><div class="section-label">关于</div><section class="card settings-card"><div class="preference-row"><span class="preference-icon" data-icon="folder"></span><div class="preference-copy"><strong>文件管理</strong><small>卸载将清除回收站文件与模块记录</small></div><span class="version-label">v1.7.2</span></div></section>
+</details><div class="section-label">关于</div><section class="card settings-card"><div class="preference-row"><span class="preference-icon" data-icon="folder"></span><div class="preference-copy"><strong>文件管理</strong><small>卸载将清除回收站文件与模块记录</small></div><span class="version-label">v1.7.3</span></div></section>
 <p class="hint settings-note">外观偏好保存在当前 WebUI 宿主。清除宿主数据后会恢复默认设置。</p>
 </section>
-<footer>文件管理 1.7.2</footer>
+<footer>文件管理 1.7.3</footer>
 <dialog id="directory-picker" class="floating-dialog directory-dialog" aria-labelledby="picker-title"><div class="section-title"><h2 id="picker-title">选择文件夹</h2><button id="picker-close" type="button">取消</button></div><div id="picker-breadcrumbs" class="breadcrumbs"></div><p id="picker-path" class="hint"></p><p id="picker-status" class="hint" role="status"></p><div id="picker-list"></div><div class="pagination"><button id="picker-prev">上一页</button><span id="picker-page">1</span><button id="picker-next">下一页</button></div><div class="dialog-actions"><button id="picker-use" class="primary" type="button">选择当前目录</button></div></dialog>
 </main>
 <div class="navigation-dock"><nav aria-label="功能" role="tablist" class="bottom-navigation">
-<button id="nav-scan" role="tab" class="tab active" data-tab="scan" aria-controls="scan-panel" aria-selected="true"><span data-icon="copies"></span><span>重复文件</span></button>
-<button id="nav-repair" role="tab" class="tab" data-tab="repair" aria-controls="repair-panel" aria-selected="false"><span data-icon="repair"></span><span>文件修复</span></button>
+<button id="nav-scan" role="tab" class="tab active" data-tab="scan" aria-controls="scan-panel repair-panel" aria-selected="true"><span data-icon="copies"></span><span>重复文件</span></button>
 <button id="nav-trash" role="tab" class="tab" data-tab="trash" aria-controls="trash-panel" aria-selected="false"><span class="nav-icon" data-icon="trash"><span id="trash-count">0</span></span><span>回收站</span></button>
 <button id="nav-settings" role="tab" class="tab" data-tab="settings" aria-controls="settings-panel" aria-selected="false"><span data-icon="settings"></span><span>设置</span></button>
 </nav></div>

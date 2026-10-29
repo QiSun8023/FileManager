@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import {readFile} from 'node:fs/promises';
 const source=await readFile(new URL('../module/webroot/theme.js',import.meta.url),'utf8');
-const {normalizePreferences,resolveMonetPalette,paletteTone,accents}=await import(`data:text/javascript;base64,${Buffer.from(source).toString('base64')}`);
+const {normalizePreferences,resolveMonetPalette,paletteTone,accents,initAppearance}=await import(`data:text/javascript;base64,${Buffer.from(source).toString('base64')}`);
 assert.equal(accents.length,6);
 assert.deepEqual(normalizePreferences(null),{accent:'green',scheme:'system',monet:false});
 assert.deepEqual(normalizePreferences({accent:'blue',scheme:'dark',monet:true}),{accent:'blue',scheme:'dark',monet:true});
@@ -25,4 +25,26 @@ assert.deepEqual(normalizeDisplay({blur:false,floating:false,glass:true,scale:12
 assert.equal(normalizeDisplay({scale:999}).scale,100);
 assert.equal(normalizeDisplay({scale:'120'}).scale,100);
 console.log('PASS stored display preferences reject invalid scale and preserve valid choices');
-console.log('Theme: 6 scenarios passed.');
+// Exercise the real appearance lifecycle with an empty/delayed host stylesheet.
+const nodes=new Map(),sheets=[],timers=new Map();let timerId=0,hostColors={};
+const node=()=>({dataset:{},style:{values:new Map(),setProperty(k,v){this.values.set(k,v);},removeProperty(k){this.values.delete(k);}},events:{},children:[],addEventListener(k,f){this.events[k]=f;},setAttribute(){},append(...items){this.children.push(...items);},remove(){this.removed=true;}});
+const root=node(),get=id=>{if(!nodes.has(id))nodes.set(id,node());return nodes.get(id);};
+const prior=new Map(['document','window','localStorage','matchMedia','getComputedStyle','CSS','setTimeout','clearTimeout'].map(k=>[k,Object.getOwnPropertyDescriptor(globalThis,k)]));
+try{
+ globalThis.document={documentElement:root,hidden:false,events:{},getElementById:get,createElement:node,createTextNode:text=>text,querySelectorAll:selector=>selector==='[data-palette]'?get('accent-palette').children:[],addEventListener(k,f){this.events[k]=f;},head:{append:sheet=>sheets.push(sheet)}};
+ globalThis.window={ksu:{}};globalThis.localStorage={getItem:()=>JSON.stringify({monet:true}),setItem(){}};
+ globalThis.matchMedia=()=>({matches:false,addEventListener(){}});globalThis.CSS={supports:(_k,v)=>/^#[a-f0-9]{6}([a-f0-9]{2})?$/i.test(v)};
+ globalThis.getComputedStyle=()=>({getPropertyValue:k=>hostColors[k.slice(2)]||''});
+ globalThis.setTimeout=f=>{timers.set(++timerId,f);return timerId;};globalThis.clearTimeout=id=>timers.delete(id);
+ initAppearance();assert.equal(sheets.length,1);assert.equal(get('appearance-retry').hidden,false);
+ for(let attempt=0;attempt<4;attempt++){sheets.at(-1).onload();if(attempt<3){assert.equal(timers.size,1);const [id,run]=timers.entries().next().value;timers.delete(id);run();}}
+ assert.equal(sheets.length,4);assert.equal(timers.size,0);assert.match(get('appearance-status').textContent,/未读取到宿主配色/);assert.equal(get('appearance-scheme').disabled,false);assert.equal(get('accent-palette').children[0].disabled,false);
+ console.log('PASS empty host colors retry only three times and keep manual settings usable');
+ get('appearance-retry').events.click();hostColors=colors;sheets.at(-1).onload();assert.equal(root.style.values.get('--accent'),colors.primary);assert.equal(get('appearance-scheme').disabled,true);
+ console.log('PASS explicit retry accepts newly available host colors');
+ const activeSheet=sheets.at(-1);get('appearance-monet').checked=false;get('appearance-monet').events.change();activeSheet.onload();assert.equal(root.style.values.has('--accent'),false);assert.equal(get('appearance-retry').hidden,true);
+ console.log('PASS disabled Monet ignores stale stylesheet callbacks');
+ hostColors={};get('appearance-monet').checked=true;get('appearance-monet').events.change();sheets.at(-1).onerror();assert.equal(timers.size,1);get('appearance-monet').checked=false;get('appearance-monet').events.change();assert.equal(timers.size,0);
+ console.log('PASS changing appearance cancels pending host stylesheet retries');
+}finally{for(const [key,descriptor]of prior){if(descriptor)Object.defineProperty(globalThis,key,descriptor);else delete globalThis[key];}}
+console.log('Theme: 10 scenarios passed.');

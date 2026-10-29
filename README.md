@@ -1,3 +1,7 @@
+## v1.7.3 更新
+
+重复组／可回收恢复为两张统计卡。文件修复归入重复文件页面，页内切换内容查重／文件修复，底部三个功能入口保持常驻。Monet 未读到配色时说明宿主兼容性与设置要求，短暂自动重试并可手动重新读取；仍无颜色则保留手动配色。
+
 ## v1.7.2 修正
 
 底部四个功能导航始终显示。重复文件、修复、回收站的文件操作栏在未选择时隐藏，选中后显示，取消全部后再次隐藏。保留跨页选择，自动调整底部留白。核心文件处理、数据路径、安装与卸载清理逻辑不变。
@@ -14,7 +18,7 @@
 
 ## 下载
 
-在 [Releases](https://github.com/QiSun8023/FileManager/releases) 下载 `FileManager-v1.7.2-arm64.zip`。源码 ZIP 和独立 WebUI ZIP 不能作为模块安装。ARM64、Android 8.0+，通过已开机的 KernelSU 管理器安装。
+在 [Releases](https://github.com/QiSun8023/FileManager/releases) 下载 `FileManager-v1.7.3-arm64.zip`。源码 ZIP 和独立 WebUI ZIP 不能作为模块安装。ARM64、Android 8.0+，通过已开机的 KernelSU 管理器安装。
 
 ## 从旧标识迁移
 

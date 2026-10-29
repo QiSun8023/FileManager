@@ -20,7 +20,7 @@ export function initInterface(){
  function save(){try{localStorage.setItem('fm.display',JSON.stringify(settings));}catch{}repaint();}
  for(const key of ['blur','floating','glass'])$('display-'+key).addEventListener('change',()=>{settings[key]=$('display-'+key).checked;save();});$('display-scale').addEventListener('input',()=>{settings.scale=Number($('display-scale').value);save();});
  const labels={scan:'重复文件',repair:'文件修复',trash:'回收站',settings:'设置'};
- document.querySelectorAll('[data-tab]').forEach(button=>button.addEventListener('click',()=>{root.dataset.page=button.dataset.tab;$('page-title').textContent=labels[button.dataset.tab];requestAnimationFrame(measureChrome);window.scrollTo({top:0,behavior:'instant'});}));
+ document.addEventListener('fm:page',event=>{root.dataset.page=event.detail.page;$('page-title').textContent=labels[event.detail.page];requestAnimationFrame(measureChrome);window.scrollTo({top:0,behavior:'instant'});});
  $('appearance-open').addEventListener('click',()=>$('nav-settings').click());
  document.addEventListener('keydown',event=>{if(event.target.matches('[role=tab]')&&['ArrowLeft','ArrowRight','Home','End'].includes(event.key)){event.preventDefault();const tabs=[...document.querySelectorAll('[role=tab]')],i=tabs.indexOf(event.target);const index=event.key==='Home'?0:event.key==='End'?tabs.length-1:(i+(event.key==='ArrowRight'?1:-1)+tabs.length)%tabs.length;tabs[index].click();tabs[index].focus();}});
  root.dataset.page='scan';const observer=new ResizeObserver(measureChrome);observer.observe(document.querySelector('.navigation-dock'));document.querySelectorAll('.cleanbar,.trash-actions').forEach(e=>observer.observe(e));window.addEventListener('resize',measureChrome);repaint();
