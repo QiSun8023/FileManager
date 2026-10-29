@@ -1,7 +1,7 @@
-import {createBackend} from './bridge.js?v=1.7.1';
-import {initAppearance} from './theme.js?v=1.7.1';
-import {initInterface} from './ui.js?v=1.7.1';
-import {createDemo} from './demo.js?v=1.7.1';
+import {createBackend} from './bridge.js?v=1.7.2';
+import {initAppearance} from './theme.js?v=1.7.2';
+import {initInterface} from './ui.js?v=1.7.2';
+import {createDemo} from './demo.js?v=1.7.2';
 const $=id=>document.getElementById(id),preview=new URLSearchParams(location.search).get('demo')==='1',connected=!!(window.ksu&&typeof window.ksu.exec==='function')&&!preview;
 const demo=createDemo();let sequence=0,busy=false,running=false,pollPromise=null,lastStatus='',currentJob='';
 let page=0,total=0,scan='',groups=[],dupSummary={},repairPage=0,repairTotal=0,repairScan='',repairItems=[],repairSummary={},repairDirty=false,repairZone='Asia/Shanghai';
@@ -10,10 +10,11 @@ const bytes=n=>{if(!n)return '0 B';const u=['B','KB','MB','GB','TB'],i=Math.min(
 function node(tag,cls,text){const n=document.createElement(tag);if(cls)n.className=cls;if(text!==undefined)n.textContent=text;return n;}
 function note(text){$('notice').textContent=text;$('notice').hidden=!text;}
 function nativeExec(command){return new Promise((resolve,reject)=>{const key=`fm_${Date.now()}_${sequence++}`,timer=setTimeout(()=>{delete window[key];reject(new Error('等待超时，任务可能仍在运行，请稍后查看进度。'));},600000);window[key]=(errno,stdout,stderr)=>{clearTimeout(timer);delete window[key];Number(errno)?reject(new Error(stderr||`执行失败 (${errno})`)):resolve(stdout);};try{window.ksu.exec(command,'{}',key);}catch(e){clearTimeout(timer);delete window[key];reject(e);}});}
-const backend=createBackend(nativeExec,'v1.7.1');
-async function api(action,data={}){if(preview)return demo(action,data);if(!connected)throw new Error('请在 KernelSU 或兼容的 Root WebUI 宿主中打开本模块。');const result=await backend(action,data);$('connection').textContent='已连接 v1.7.1';return result;}
+const backend=createBackend(nativeExec,'v1.7.2');
+async function api(action,data={}){if(preview)return demo(action,data);if(!connected)throw new Error('请在 KernelSU 或兼容的 Root WebUI 宿主中打开本模块。');const result=await backend(action,data);$('connection').textContent='已连接 v1.7.2';return result;}
 function toggleButton(id,label,state,capacity,extra=false){const b=$(id);b.textContent=label;b.dataset.state=state||'off';b.setAttribute('aria-label',label);b.setAttribute('aria-pressed',state==='on'?'true':state==='partial'?'mixed':'false');b.disabled=busy||running||!capacity||extra;}
 function controls(){const locked=busy||running;
+ document.querySelector('#scan-panel .cleanbar').hidden=!(dupSummary.count>0);document.querySelector('#repair-panel .cleanbar').hidden=!(repairSummary.count>0);document.querySelector('.trash-actions').hidden=!(trashSummary.count>0);
  for(const id of ['start','root','repair-root','min','repair-zone','repair-time','repair-rename','repair-preview'])$(id).disabled=locked||(!connected&&!preview);
  $('repair-preview').disabled ||= !$('repair-time').checked&&!$('repair-rename').checked;
  document.querySelectorAll('[data-root],.recent-dirs button').forEach(b=>b.disabled=locked);
