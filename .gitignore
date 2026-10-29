@@ -1,0 +1,9 @@
+dist/
+module/bin/
+.venv/
+__pycache__/
+*.pyc
+*.exe
+.DS_Store
+.ksu-tests.*/
+.live-tests.*/

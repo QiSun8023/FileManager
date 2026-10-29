@@ -1,0 +1,7 @@
+id=dupeguard
+name=文件管理
+version=v1.5.1
+versionCode=10501
+author=SunQi & Codex
+description=点击路径选择目录、跨页选择与取消、多色及 Monet 外观；支持内容查重、日期/后缀修复、回收站及 KernelSU 热安装。
+updateJson=https://raw.githubusercontent.com/QiSun8023/FileManager/main/update.json
