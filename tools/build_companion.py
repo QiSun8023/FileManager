@@ -17,7 +17,12 @@ def main():
  jar=build/'classes.jar';run([Path(os.environ['JAVA_HOME'])/'bin/jar.exe','--create','--file',jar,'-C',classes,'.'])
  run([bt/'d8.bat','--release','--min-api','29','--lib',android,'--output',dex,jar])
  unsigned=build/'unsigned.apk';run([bt/'aapt2.exe','link','-I',android,'--manifest',ROOT/'companion/AndroidManifest.xml','-o',unsigned])
- with zipfile.ZipFile(unsigned,'a',compression=zipfile.ZIP_DEFLATED) as z:z.write(dex/'classes.dex','classes.dex')
+ with zipfile.ZipFile(unsigned,'a',compression=zipfile.ZIP_DEFLATED) as z:
+  z.write(dex/'classes.dex','classes.dex')
+  for asset in sorted((ROOT/'companion/assets').glob('*')):
+   if asset.is_file():z.write(asset,'assets/'+asset.name)
+  editor=(ROOT/'module/webroot/watch-editor.js').read_text(encoding='utf8').replace('export ','')
+  z.writestr('assets/watch-editor.js',editor+'\nwindow.FMWatchEditor={fileTypes,ruleRoots,renderRules,createDirectoryChooser};\n')
  aligned=build/'aligned.apk';run([bt/'zipalign.exe','-f','4',unsigned,aligned])
  out=ROOT/'module/companion.apk';run([bt/'apksigner.bat','sign','--ks',keystore,'--ks-pass','file:'+str(pw),'--out',out,aligned]);run([bt/'apksigner.bat','verify','--verbose','--print-certs',out])
  (ROOT/'module/companion.sha256').write_text(hashlib.sha256(out.read_bytes()).hexdigest()+'\n',encoding='ascii',newline='\n');print('Built',out.name)

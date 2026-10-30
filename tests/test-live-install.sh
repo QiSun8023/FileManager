@@ -25,8 +25,8 @@ fixture() {
   printf 'restore records' > "$data/trash/record.json"
   printf 'repair records' > "$data/repairs/record.json"
   printf 'QiSun8023/FileManager' > "$stage/filemanager-origin"
-  printf 'id=filemanager\nversion=v1.8.1\n' > "$stage/module.prop"
-  printf '#!/bin/sh\nprintf '\''{"ok":true,"data":{"version":"v1.8.1"}}\\n'\''\n' > "$stage/bin/filemanager"
+  printf 'id=filemanager\nversion=v1.9.0\n' > "$stage/module.prop"
+  printf '#!/bin/sh\nprintf '\''{"ok":true,"data":{"version":"v1.9.0"}}\\n'\''\n' > "$stage/bin/filemanager"
   chmod 755 "$stage/bin/filemanager"
   printf 'new-page' > "$stage/webroot/index.html"
   printf 'new-js' > "$stage/webroot/app.js"
@@ -46,7 +46,7 @@ kept_records() {
 }
 published() {
   [ "$(cat "$active/webroot/index.html")" = new-page ] || fail 'page not activated'
-  "$active/bin/filemanager" info e30= | grep -Fq '"version":"v1.8.1"' || fail 'backend not activated'
+  "$active/bin/filemanager" info e30= | grep -Fq '"version":"v1.9.0"' || fail 'backend not activated'
   [ ! -d "$data/lock" ] || fail 'installer lock leaked'
   [ ! -e "$adb/modules/.filemanager-live-$$" ] || fail 'prepared directory leaked'
   [ ! -e "$data/.filemanager-backup-$$" ] || fail 'backup directory leaked'

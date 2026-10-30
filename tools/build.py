@@ -40,7 +40,7 @@ def main():
     run([sys.executable, str(ROOT/'tests/test-release.py')])
     run([args.go, 'test', './...'], ROOT/'engine', env)
     run([args.go, 'vet', './...'], ROOT/'engine', env)
-    for test in ('test-bridge.mjs', 'test-theme.mjs', 'test-watch-ui.mjs'):
+    for test in ('test-bridge.mjs', 'test-theme.mjs', 'test-watch-ui.mjs', 'test-helper-ui.mjs'):
         run([args.node, str(ROOT/'tests'/test)])
     for test in ('test-live-install.sh', 'test-ksu-install.sh', 'test-legacy-install.sh', 'test-uninstall.sh', 'test-companion-install.sh'):
         run([args.bash, str(ROOT/'tests'/test)])

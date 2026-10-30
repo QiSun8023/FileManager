@@ -34,9 +34,9 @@ def main():
     if args.version == previous['version']:
         parser.error('Choose a new version name')
     old = previous['version']
-    for folder in ('engine', 'module', 'tests'):
+    for folder in ('engine', 'module', 'tests', 'companion'):
         for path in (ROOT/folder).rglob('*'):
-            if not path.is_file() or 'bin' in path.relative_to(ROOT/folder).parts:
+            if not path.is_file() or {'bin','build'}.intersection(path.relative_to(ROOT/folder).parts):
                 continue
             if path.suffix not in ('.go', '.js', '.mjs', '.html', '.css', '.sh', '.md', '.prop'):
                 continue

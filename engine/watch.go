@@ -22,7 +22,8 @@ const helperPackage = "io.github.qisun8023.filemanager.helper"
 
 type WatchRule struct {
 	ID         string   `json:"id"`
-	Root       string   `json:"root"`
+	Root       string   `json:"root,omitempty"`
+	Roots      []string `json:"roots"`
 	Target     string   `json:"target"`
 	Extensions []string `json:"extensions"`
 	Recursive  bool     `json:"recursive"`
@@ -63,6 +64,12 @@ type WatchState struct {
 func (e *Engine) watchConfig() WatchConfig {
 	c := WatchConfig{StableSeconds: 60, Rules: []WatchRule{}}
 	read(e.path("watch-config.json"), &c)
+	for i := range c.Rules {
+		c.Rules[i].Roots = watchRoots(c.Rules[i])
+		if len(c.Rules[i].Roots) > 0 {
+			c.Rules[i].Root = c.Rules[i].Roots[0]
+		}
+	}
 	return c
 }
 func (e *Engine) watchState() (WatchState, error) {
@@ -96,18 +103,36 @@ func (e *Engine) validateWatch(c WatchConfig) (WatchConfig, error) {
 	for i := range c.Rules {
 		r := &c.Rules[i]
 		var err error
-		if r.Root, err = e.checked(r.Root); err != nil {
-			return c, err
+		roots := watchRoots(*r)
+		if len(roots) == 0 || len(roots) > 100 {
+			return c, errors.New("每条规则请选择 1–100 个监控目录")
 		}
+		unique := map[string]bool{}
+		r.Roots = nil
+		for _, root := range roots {
+			root, err = e.checked(root)
+			if err != nil {
+				return c, err
+			}
+			f, er := os.Stat(root)
+			if er != nil || !f.IsDir() {
+				return c, errors.New("监控目录不存在")
+			}
+			if !unique[root] {
+				r.Roots = append(r.Roots, root)
+				unique[root] = true
+			}
+		}
+		sort.Strings(r.Roots)
+		r.Root = r.Roots[0]
 		if r.Target, err = e.checked(r.Target); err != nil {
 			return c, err
 		}
-		for _, p := range []string{r.Root, r.Target} {
-			f, err := os.Stat(p)
-			if err != nil || !f.IsDir() {
-				return c, errors.New("请选择存在的目录")
-			}
+		f, er := os.Stat(r.Target)
+		if er != nil || !f.IsDir() {
+			return c, errors.New("目标目录不存在")
 		}
+
 		if r.ID == "" {
 			r.ID = token()
 		}
@@ -115,8 +140,8 @@ func (e *Engine) validateWatch(c WatchConfig) (WatchConfig, error) {
 			return c, errors.New("规则编号无效或重复")
 		}
 		ids[r.ID] = true
-		if len(r.Extensions) == 0 || len(r.Extensions) > 30 {
-			return c, errors.New("每条规则需要 1–30 种文件后缀")
+		if len(r.Extensions) == 0 || len(r.Extensions) > 64 {
+			return c, errors.New("每条规则需要 1–64 种文件后缀")
 		}
 		seen := map[string]bool{}
 		exts := []string{}
@@ -135,67 +160,101 @@ func (e *Engine) validateWatch(c WatchConfig) (WatchConfig, error) {
 		}
 		r.Extensions = exts
 	}
+	rootCount := 0
 	for _, r := range c.Rules {
+		rootCount += len(r.Roots)
 		for _, other := range c.Rules {
-			if within(other.Root, r.Target) {
-				return c, errors.New("目标目录不能位于任何监控目录内，以免反复提醒")
+			for _, root := range other.Roots {
+				if within(root, r.Target) {
+					return c, errors.New("目标目录不能位于任何监控目录内，以免反复提醒")
+				}
 			}
 		}
 	}
+	if rootCount > 100 {
+		return c, errors.New("监控目录总数最多 100 个")
+	}
+
 	return c, nil
 }
 func watchKey(rule, path string) string { return rule + "|" + path }
+func watchRoots(r WatchRule) []string {
+	if len(r.Roots) > 0 {
+		return append([]string(nil), r.Roots...)
+	}
+	if r.Root != "" {
+		return []string{r.Root}
+	}
+	return []string{}
+}
+func watchContains(r WatchRule, path string) bool {
+	for _, root := range watchRoots(r) {
+		if path != root && within(root, path) && (r.Recursive || filepath.Dir(path) == root) {
+			return true
+		}
+	}
+	return false
+}
+func watchScopeSame(a, b WatchRule) bool {
+	if a.Target != b.Target || a.Recursive != b.Recursive {
+		return false
+	}
+	x := append([]string(nil), a.Extensions...)
+	y := append([]string(nil), b.Extensions...)
+	sort.Strings(x)
+	sort.Strings(y)
+	return strings.Join(x, "|") == strings.Join(y, "|")
+}
 func (e *Engine) watchFiles(c WatchConfig) (map[string]WatchEntry, error) {
 	result := map[string]WatchEntry{}
 	seenPaths := map[string]bool{}
 	count := 0
 	for _, r := range c.Rules {
-		err := filepath.WalkDir(r.Root, func(p string, d fs.DirEntry, err error) error {
-			if err != nil {
-				return err
-			}
-			if p != r.Root && (d.IsDir() && (d.Name() == "Android" || strings.HasPrefix(d.Name(), ".")) || d.Type()&os.ModeSymlink != 0) {
+		for _, root := range watchRoots(r) {
+			err := filepath.WalkDir(root, func(p string, d fs.DirEntry, err error) error {
+				if err != nil {
+					return err
+				}
+				if p != root && (d.IsDir() && (d.Name() == "Android" || strings.HasPrefix(d.Name(), ".")) || d.Type()&os.ModeSymlink != 0) {
+					if d.IsDir() {
+						return filepath.SkipDir
+					}
+					return nil
+				}
 				if d.IsDir() {
-					return filepath.SkipDir
+					if p != root && !r.Recursive {
+						return filepath.SkipDir
+					}
+					return nil
 				}
-				return nil
-			}
-			if d.IsDir() {
-				if p != r.Root && !r.Recursive {
-					return filepath.SkipDir
+				count++
+				if count > 100000 {
+					return errors.New("监控文件超过 10 万，请缩小范围")
 				}
-				return nil
-			}
-			count++
-			if count > 100000 {
-				return errors.New("监控文件超过 10 万，请缩小范围")
-			}
-			match := false
-			for _, ext := range r.Extensions {
-				if strings.EqualFold(filepath.Ext(p), ext) {
-					match = true
-					break
+				match := false
+				for _, ext := range r.Extensions {
+					if strings.EqualFold(filepath.Ext(p), ext) {
+						match = true
+						break
+					}
 				}
-			}
-			if !match {
+				if !match || seenPaths[p] {
+					return nil
+				}
+				info, er := d.Info()
+				if er != nil {
+					return er
+				}
+				if !info.Mode().IsRegular() {
+					return nil
+				}
+				seenPaths[p] = true
+				result[watchKey(r.ID, p)] = WatchEntry{Path: p, Size: info.Size(), Modified: info.ModTime().UnixNano()}
 				return nil
+			})
+			if err != nil {
+				return nil, fmt.Errorf("监控目录 %s：%w", root, err)
 			}
-			info, er := d.Info()
-			if er != nil {
-				return er
-			}
-			if !info.Mode().IsRegular() {
-				return nil
-			}
-			if seenPaths[p] {
-				return nil
-			}
-			seenPaths[p] = true
-			result[watchKey(r.ID, p)] = WatchEntry{Path: p, Size: info.Size(), Modified: info.ModTime().UnixNano()}
-			return nil
-		})
-		if err != nil {
-			return nil, fmt.Errorf("监控目录 %s：%w", r.Root, err)
 		}
 	}
 	return result, nil
@@ -387,38 +446,35 @@ func (e *Engine) watchSave(c WatchConfig) (any, error) {
 	if err != nil {
 		return nil, err
 	}
-	valid := map[string]bool{}
+	current := map[string]WatchRule{}
 	for _, r := range c.Rules {
-		valid[r.ID] = true
+		current[r.ID] = r
 		o, ok := prior[r.ID]
-		same := ok && fmt.Sprint(o) == fmt.Sprint(r) && old.Enabled
+		same := ok && watchScopeSame(o, r) && old.Enabled
 		for k, v := range files {
-			if strings.HasPrefix(k, r.ID+"|") && !same {
+			if strings.HasPrefix(k, r.ID+"|") && (!same || !watchContains(o, v.Path)) {
 				v.Baseline = true
 				s.Entries[k] = v
 			}
 		}
 	}
-	for k := range s.Entries {
-		if !valid[strings.SplitN(k, "|", 2)[0]] {
+	for k, entry := range s.Entries {
+		rule, ok := current[strings.SplitN(k, "|", 2)[0]]
+		if !ok || !watchContains(rule, entry.Path) {
 			delete(s.Entries, k)
 		}
 	}
 	for id, v := range s.Items {
 		if v.State == "pending" {
-			o, ok := prior[v.Rule]
-			changed := !ok
-			for _, r := range c.Rules {
-				if r.ID == v.Rule {
-					changed = changed || fmt.Sprint(o) != fmt.Sprint(r)
-				}
-			}
-			if !valid[v.Rule] || changed || !old.Enabled {
+			o, was := prior[v.Rule]
+			n, has := current[v.Rule]
+			if !was || !has || !old.Enabled || !watchScopeSame(o, n) || !watchContains(n, v.Path) {
 				v.State = "cancelled"
 				s.Items[id] = v
 			}
 		}
 	}
+
 	// Persist the baseline before enabling. A failure can suppress a reminder but cannot move a file.
 	if err = save(e.path("watch-state.json"), s); err != nil {
 		return nil, err
@@ -462,7 +518,7 @@ func (e *Engine) watchDecide(r Request) (any, error) {
 	}
 	matched := false
 	for _, rule := range c.Rules {
-		if rule.ID == v.Rule && rule.Target == v.Target && within(rule.Root, v.Path) {
+		if rule.ID == v.Rule && rule.Target == v.Target && watchContains(rule, v.Path) {
 			matched = true
 		}
 	}

@@ -225,3 +225,85 @@ func TestWatchStatusRejectsForeignPID(t *testing.T) {
 		t.Fatal("foreign/reused PID advertised as a running monitor")
 	}
 }
+
+func TestWatchMultipleRootsMigrationAndScopedBaseline(t *testing.T) {
+	e, c, a, dst := watchFixture(t)
+	now := time.Now()
+	watchArchive(t, filepath.Join(a, "old.zip"))
+	if _, err := e.watchSave(c); err != nil {
+		t.Fatal(err)
+	}
+	cfg := e.watchConfig()
+	id := cfg.Rules[0].ID
+	// Real legacy shape: roots is absent; a config read must not rewrite persisted data.
+	legacy := map[string]any{"enabled": true, "stableSeconds": 30, "rules": []any{map[string]any{"id": id, "root": a, "target": dst, "extensions": []string{".zip", ".apk"}, "recursive": false}}}
+	save(e.path("watch-config.json"), legacy)
+	before, _ := os.ReadFile(e.path("watch-config.json"))
+	cfg = e.watchConfig()
+	after, _ := os.ReadFile(e.path("watch-config.json"))
+	if string(before) != string(after) || len(cfg.Rules[0].Roots) != 1 || cfg.Rules[0].ID != id {
+		t.Fatal("legacy migration changed baseline or ID")
+	}
+	watchArchive(t, filepath.Join(a, "pending.zip"))
+	tickWatch(t, e, now)
+	tickWatch(t, e, now.Add(time.Minute))
+	original := pendingWatch(t, e)[0]
+	b := filepath.Join(e.Storage, "aaa-second")
+	os.Mkdir(b, 0700)
+	watchArchive(t, filepath.Join(b, "existing.zip"))
+	cfg.Rules[0].Roots = append(cfg.Rules[0].Roots, b)
+	if _, err := e.watchSave(cfg); err != nil {
+		t.Fatal(err)
+	}
+	items := pendingWatch(t, e)
+	if len(items) != 1 || items[0].ID != original.ID {
+		t.Fatal("adding a root cancelled existing pending item")
+	}
+	watchArchive(t, filepath.Join(b, "new.zip"))
+	tickWatch(t, e, now.Add(2*time.Minute))
+	tickWatch(t, e, now.Add(3*time.Minute))
+	items = pendingWatch(t, e)
+	if len(items) != 2 {
+		t.Fatalf("want A pending + B new, got %v", items)
+	}
+	cfg = e.watchConfig()
+	roots := cfg.Rules[0].Roots
+	cfg.Rules[0].Roots = []string{roots[1], roots[0]}
+	if _, err := e.watchSave(cfg); err != nil {
+		t.Fatal(err)
+	}
+	if len(pendingWatch(t, e)) != 2 {
+		t.Fatal("reordering roots reset pending items")
+	}
+	cfg.Rules[0].Roots = []string{b}
+	if _, err := e.watchSave(cfg); err != nil {
+		t.Fatal(err)
+	}
+	items = pendingWatch(t, e)
+	if len(items) != 1 || filepath.Dir(items[0].Path) != b {
+		t.Fatal("removing A changed B pending item")
+	}
+	if _, err := e.watchDecide(Request{ID: items[0].ID, Decision: "move"}); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := os.Stat(filepath.Join(dst, "new.zip")); err != nil {
+		t.Fatal(err)
+	}
+}
+func TestWatchAllRootsTargetGuardAndDeduplication(t *testing.T) {
+	e, c, a, _ := watchFixture(t)
+	b := filepath.Join(e.Storage, "second")
+	os.Mkdir(b, 0700)
+	c.Rules[0].Roots = []string{a, b, a}
+	c.Rules[0].Target = b
+	if _, err := e.watchSave(c); err == nil {
+		t.Fatal("target in non-first source accepted")
+	}
+	c.Rules[0].Target = filepath.Join(e.Storage, "sorted")
+	if _, err := e.watchSave(c); err != nil {
+		t.Fatal(err)
+	}
+	if len(e.watchConfig().Rules[0].Roots) != 2 {
+		t.Fatal("duplicate roots not removed")
+	}
+}
