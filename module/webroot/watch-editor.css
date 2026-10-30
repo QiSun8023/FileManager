@@ -1,0 +1,42 @@
+/* Monitor rule editor, directory chooser and pending-file route. Shared by the WebUI and the helper app. */
+.watch-rule-heading { padding-bottom: 6px; }
+.watch-rule-heading h3 { font-size: 17px; }
+.watch-section { padding-top: 6px; }
+.watch-field-label { display: block; margin-bottom: 8px; color: var(--mx-title-variant); font-size: 13px; font-weight: 700; }
+.watch-source-list { display: flex; flex-direction: column; gap: 6px; margin-bottom: 10px; }
+.watch-source-list .hint { margin: 0; color: var(--mx-summary); font-size: 14px; }
+.watch-source-row { display: flex; align-items: center; gap: 10px; min-height: 44px; padding: 2px 2px 2px 14px; border-radius: 12px; background: var(--mx-secondary-variant); font-size: 14px; }
+.watch-source-row > .mx-icon { color: var(--mx-primary); }
+.watch-source-row > span { flex: 1; min-width: 0; overflow-wrap: anywhere; }
+.watch-source-row .mx-icon-button { width: 36px; height: 36px; }
+.watch-source-row .mx-icon-button .mx-icon { width: 18px; height: 18px; }
+.watch-rule .path-field > .mx-icon:first-child { color: var(--mx-primary); }
+.watch-rule .path-field .placeholder { color: var(--mx-summary); }
+.watch-rule .path-field::before { display: none; }
+.type-group + .type-group { margin-top: 12px; }
+.type-group-title { display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 14px; font-weight: 500; }
+.type-group-title .muted { color: var(--mx-primary); font-size: 13px; }
+.type-chips .mx-chip { min-width: 56px; justify-content: center; }
+.watch-recursive { border-top: .5px solid var(--mx-divider); }
+.watch-delete-rule { color: var(--mx-error); }
+.watch-route { display: grid; grid-template-columns: 16px 1fr; gap: 4px 10px; margin: 0 16px 12px; padding: 10px 12px; border-radius: 12px; background: var(--mx-secondary-variant); color: var(--mx-summary); font-size: 13px; }
+.watch-route > span { grid-column: 2; overflow-wrap: anywhere; }
+.watch-route::before { grid-row: 1 / 3; width: 2px; margin: 6px auto; border-radius: 1px; background: linear-gradient(var(--mx-summary), var(--mx-primary)); content: ""; }
+.watch-route > span:last-child { color: var(--mx-on-surface); }
+.header-spacer { width: 40px; flex: none; }
+.breadcrumbs { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 8px; }
+.breadcrumbs .mx-chip { min-height: 30px; padding: 4px 10px; font-size: 13px; }
+.breadcrumbs .mx-chip:last-child { background: var(--mx-tertiary-container); color: var(--mx-on-tertiary-container); }
+.picker-path { margin-bottom: 4px; color: var(--mx-summary); font-size: 13px; overflow-wrap: anywhere; }
+.picker-list { display: flex; flex-direction: column; max-height: 46dvh; overflow: auto; margin: 0 -8px; }
+.picker-list .mx-row { min-height: 50px; padding-top: 10px; padding-bottom: 10px; }
+.picker-list .mx-row > .mx-icon:first-child { color: var(--mx-primary); }
+.picker-list .mx-row > .mx-icon:last-child { color: var(--mx-actions); }
+.picker-list .mx-row-title { flex: 1; min-width: 0; font-size: 16px; }
+.watch-directory-row { display: flex; align-items: center; gap: 4px; padding-left: 8px; }
+.watch-directory-row .directory-row { flex: 1; min-width: 0; }
+.watch-folder-check { display: flex; padding: 4px; }
+.watch-current { margin: 4px -8px 0; }
+.watch-current .mx-row-title { font-size: 16px; }
+.mx-dialog .pagination { padding-bottom: 0; }
+.mx-dialog .status-line { margin: 4px 0; }

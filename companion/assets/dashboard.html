@@ -1,13 +1,98 @@
-<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; connect-src 'none'; object-src 'none'; frame-src 'none'; base-uri 'none'"><title>文件管理助手</title><link rel="stylesheet" href="dashboard.css"><script defer src="watch-editor.js"></script><script defer src="dashboard.js"></script></head><body>
-<header><div class="brand-icon" aria-hidden="true"><svg viewBox="0 0 108 108" aria-hidden="true"><path fill="#284A5C" d="M22 36Q22 30 28 30H44L51 37H80Q86 37 86 43V73Q86 80 79 80H29Q22 80 22 73Z"/><path fill="#F3E8CB" d="M32 34H44L51 41H76V56H32Z"/><path fill="#F7B955" d="M22 49Q22 43 28 43H80Q86 43 86 49V73Q86 80 79 80H29Q22 80 22 73Z"/><path fill="#fff" d="M39 60H58V54L70 64 58 74V68H39Z"/></svg></div><div><small>FILE MANAGER</small><h1>文件管理</h1></div><button id="refresh" class="icon-button" aria-label="刷新状态"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 7v5h-5"/><path d="M20 12a8 8 0 1 1-2-6"/></svg></button></header><main>
-<div id="message" class="notice" role="status" hidden></div>
-<section id="overview" class="page"><div class="status-card"><div class="status-top"><span class="status-dot"></span><span id="connection">尚未连接</span><span class="version">助手</span></div><h2 id="hero-title">让文件各归其位</h2><p id="hero-desc">连接模块，查看文件监控与转移提醒。</p><button id="connect" class="primary">连接模块</button></div>
-<div class="stat-grid"><div class="card"><strong id="dir-count">—</strong><span>监控目录</span></div><div class="card"><strong id="type-count">—</strong><span>文件类型</span></div><div class="card"><strong id="pending-count">—</strong><span>待处理</span></div></div>
-<div class="section-label">文件整理</div><section class="card menu-card"><button data-page="monitor" class="menu-row"><span class="row-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 7a2 2 0 0 1 2-2h5l2 3h7a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg></span><span><strong>监控规则</strong><small>多目录 · 多类型 · 一个目标</small></span><b>›</b></button><button data-page="pending" class="menu-row"><span class="row-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h15m-4-4 4 4-4 4"/><path d="M20 17H5m4-4-4 4 4 4"/></svg></span><span><strong>待转移文件</strong><small>确认后移动，保留由你决定</small></span><b>›</b></button></section>
-<div class="section-label">运行保障</div><section class="card permission-summary"><div><strong id="permission-title">检查提醒权限</strong><p class="hint" id="permission-summary">通知与悬浮窗状态将显示在这里。</p></div><button data-page="settings">设置</button></section></section>
-<section id="monitor" class="page" hidden><div class="section-title"><h2>监控规则</h2><span class="muted">本机管理</span></div><section class="card"><label class="switch-row"><span>启用文件夹监控</span><input id="enabled" type="checkbox" role="switch"></label><div class="scan-options"><label for="stable">无法确认完成时等待</label><select id="stable"><option value="5">5 秒</option><option value="10">10 秒（推荐）</option><option value="30">30 秒</option><option value="60">60 秒</option><option value="120">2 分钟</option><option value="300">5 分钟</option></select></div><p class="hint">每条规则可选多个来源目录，共用文件类型和一个目标目录。新增目录会忽略已有文件。</p></section><div id="rules"></div><div class="watch-toolbar"><button id="add">＋ 添加规则</button><button id="save" class="primary">保存规则</button></div><p class="hint">ZIP／APK 检查完整且无写入迹象后直接询问，其他格式按兜底时间等待。APK.1 转移时改为 .apk；保留原处不改名。同名文件不会覆盖。</p></section>
-<section id="pending" class="page" hidden><div class="section-title"><h2>待处理文件</h2><button id="refresh-pending">刷新</button></div><p class="hint">文件保存在原处，确认后才会转移。</p><div id="items"><div class="empty">连接模块后查看待处理文件</div></div></section>
-<section id="settings" class="page" hidden><div class="section-title"><h2>提醒设置</h2><span class="muted">运行与权限</span></div><section class="card menu-card"><button id="notification-setting" class="menu-row"><span class="row-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9a6 6 0 0 1 12 0v6l2 3H4l2-3z"/><path d="M10 21h4"/></svg></span><span><strong>通知权限</strong><small id="notification-status">检查中</small></span><b>›</b></button><button id="overlay-setting" class="menu-row"><span class="row-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 4h18v15H3z"/><path d="M12 11h10v10H12z"/></svg></span><span><strong>悬浮询问</strong><small id="overlay-status">检查中</small></span><b>›</b></button><button id="battery-setting" class="menu-row"><span class="row-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 7h17v11H3z"/><path d="M22 11v3"/><path d="m11 9-3 4h5l-3 4"/></svg></span><span><strong>后台运行</strong><small>打开应用信息，允许后台活动与自启动</small></span><b>›</b></button></section><p class="hint">ColorOS 或冻结／墓碑工具需将本助手加入白名单。即使通知和悬浮窗已允许，进程被冻结仍会延迟提醒。</p><section class="card"><div class="section-title"><h2>助手提醒</h2><span id="reminder-state" class="muted"></span></div><div class="watch-toolbar"><button id="start" class="primary">启动／恢复</button><button id="pause">暂停提醒</button></div><p class="hint">暂停助手提醒不删除待处理记录，可在模块 WebUI 中继续处理。</p></section><section class="card about"><strong>文件管理助手</strong><span>随模块一同更新 · v1.9.1</span><p class="hint">配置与待处理由模块保存，通知与悬浮询问由助手提供。</p></section></section>
-</main><nav class="bottom-navigation" aria-label="助手功能"><button data-nav="overview" class="active" aria-current="page"><span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m3 11 9-8 9 8"/><path d="M5 10v11h14V10"/><path d="M10 21v-7h4v7"/></svg></span>概览</button><button data-nav="monitor"><span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 7a2 2 0 0 1 2-2h5l2 3h7a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg></span>监控</button><button data-nav="pending"><span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h15m-4-4 4 4-4 4"/><path d="M20 17H5m4-4-4 4 4 4"/></svg></span>待处理</button><button data-nav="settings"><span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 8a4 4 0 1 0 0 8 4 4 0 0 0 0-8"/><path d="m9 3 6 0 1 3 3 1 2 5-2 2v3l-4 4-3-1-3 1-4-4v-3l-2-2 2-5 3-1z"/></svg></span>设置</button></nav>
-<dialog id="confirmation" class="floating-dialog"><h2 id="confirmation-title"></h2><p id="confirmation-text" class="hint"></p><div class="dialog-actions"><button id="confirmation-cancel">取消</button><button id="confirmation-ok" class="primary">确认</button></div></dialog>
-</body></html>
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; connect-src 'none'; object-src 'none'; frame-src 'none'; base-uri 'none'">
+<meta name="color-scheme" content="light dark">
+<title>文件管理助手</title>
+<link rel="stylesheet" href="miuix.css">
+<link rel="stylesheet" href="watch-editor.css">
+<link rel="stylesheet" href="dashboard.css">
+<script defer src="icons.js"></script>
+<script defer src="watch-editor.js"></script>
+<script defer src="dashboard.js"></script>
+</head>
+<body>
+<header class="mx-topbar" id="topbar">
+  <div class="mx-topbar-start"></div>
+  <div class="mx-topbar-title" id="topbar-title">文件管理</div>
+  <div class="mx-topbar-actions"><button id="refresh" class="mx-icon-button" type="button" aria-label="刷新状态" title="刷新状态" data-icon="refresh"></button></div>
+</header>
+<main class="mx-page">
+<div class="mx-large-title"><h1 id="page-title">文件管理</h1></div>
+<div id="message" class="mx-notice" role="status" hidden></div>
+
+<section id="overview" class="page">
+  <div class="mx-card status-card">
+    <div class="mx-row">
+      <span class="mx-row-icon status-icon" id="status-icon" data-icon="watch"></span>
+      <span class="mx-row-text"><span class="mx-row-title" id="hero-title">连接模块</span><span class="mx-row-summary" id="hero-desc">连接后查看文件监控与转移提醒</span></span>
+    </div>
+    <div class="mx-subpanel status-foot"><span id="connection" class="mx-pill">尚未连接</span><span class="mx-pill version">助手</span></div>
+    <div class="mx-subpanel" id="connect-panel"><button id="connect" class="mx-button is-primary is-block" type="button"><span data-icon="plug"></span>连接模块</button></div>
+  </div>
+  <div class="mx-stats">
+    <div class="mx-stat"><strong id="dir-count">—</strong><span>监控目录</span></div>
+    <div class="mx-stat"><strong id="type-count">—</strong><span>文件类型</span></div>
+    <div class="mx-stat"><strong id="pending-count">—</strong><span>待处理</span></div>
+  </div>
+  <div class="mx-small-title">文件整理</div>
+  <div class="mx-card">
+    <button data-page="monitor" class="mx-row" type="button"><span class="mx-row-icon" data-icon="folder"></span><span class="mx-row-text"><span class="mx-row-title">监控规则</span><span class="mx-row-summary">多个目录、多种类型、一个目标</span></span><span class="mx-row-end" data-icon="chevron"></span></button>
+    <button data-page="pending" class="mx-row" type="button"><span class="mx-row-icon" data-icon="transfer"></span><span class="mx-row-text"><span class="mx-row-title">待转移文件</span><span class="mx-row-summary">确认后才会移动</span></span><span class="mx-row-end"><span class="mx-badge" id="pending-badge" hidden></span><span data-icon="chevron"></span></span></button>
+  </div>
+  <div class="mx-small-title">运行保障</div>
+  <div class="mx-card">
+    <button data-page="settings" class="mx-row permission-summary" type="button" id="permission-row"><span class="mx-row-icon" id="permission-icon" data-icon="shield"></span><span class="mx-row-text"><span class="mx-row-title" id="permission-title">检查提醒权限</span><span class="mx-row-summary" id="permission-summary">通知与悬浮窗状态</span></span><span class="mx-row-end" data-icon="chevron"></span></button>
+  </div>
+</section>
+
+<section id="monitor" class="page" hidden>
+  <div class="mx-card">
+    <label class="mx-row switch-row"><span class="mx-row-icon" data-icon="watch"></span><span class="mx-row-text"><span class="mx-row-title">启用文件夹监控</span><span class="mx-row-summary">每条规则可选多个来源目录</span></span><input id="enabled" class="mx-switch" type="checkbox" role="switch"></label>
+    <label class="mx-row" for="stable"><span class="mx-row-icon" data-icon="clock"></span><span class="mx-row-text"><span class="mx-row-title">无法确认完成时等待</span><span class="mx-row-summary">ZIP／APK 检查完整后立即询问</span></span><select id="stable" class="mx-select"><option value="5">5 秒</option><option value="10">10 秒（推荐）</option><option value="30">30 秒</option><option value="60">60 秒</option><option value="120">2 分钟</option><option value="300">5 分钟</option></select></label>
+  </div>
+  <p class="mx-footnote">新增目录会忽略其中已有文件。APK.1 转移时改名为 .apk，同名文件不会覆盖。</p>
+  <div class="mx-small-title has-action"><span>规则</span><button id="add" class="mx-button is-text" type="button"><span data-icon="plus" data-icon-size="18"></span>添加规则</button></div>
+  <div id="rules"></div>
+  <div class="mx-section-actions"><button id="save" class="mx-button is-primary is-block" type="button"><span data-icon="save"></span>保存规则</button></div>
+</section>
+
+<section id="pending" class="page" hidden>
+  <div class="mx-small-title has-action"><span>待处理文件</span><button id="refresh-pending" class="mx-icon-button" type="button" aria-label="刷新待处理文件" title="刷新" data-icon="refresh"></button></div>
+  <div id="items"><div class="mx-card"><div class="mx-empty">连接模块后查看待处理文件</div></div></div>
+  <p class="mx-footnote">文件保存在原处，确认后才会转移。</p>
+</section>
+
+<section id="settings" class="page" hidden>
+  <div class="mx-small-title">提醒权限</div>
+  <div class="mx-card">
+    <button id="notification-setting" class="mx-row" type="button"><span class="mx-row-icon" data-icon="bell"></span><span class="mx-row-text"><span class="mx-row-title">通知</span><span class="mx-row-summary" id="notification-status">检查中</span></span><span class="mx-row-end" data-icon="chevron"></span></button>
+    <button id="overlay-setting" class="mx-row" type="button"><span class="mx-row-icon" data-icon="overlay"></span><span class="mx-row-text"><span class="mx-row-title">悬浮询问</span><span class="mx-row-summary" id="overlay-status">检查中</span></span><span class="mx-row-end" data-icon="chevron"></span></button>
+    <button id="battery-setting" class="mx-row" type="button"><span class="mx-row-icon" data-icon="battery"></span><span class="mx-row-text"><span class="mx-row-title">后台运行</span><span class="mx-row-summary">在应用信息中允许后台活动与自启动</span></span><span class="mx-row-end" data-icon="chevron"></span></button>
+  </div>
+  <p class="mx-footnote">ColorOS 或冻结／墓碑工具需将本助手加入白名单，否则提醒会延迟。</p>
+  <div class="mx-small-title">助手提醒</div>
+  <div class="mx-card">
+    <div class="mx-row"><span class="mx-row-icon" data-icon="phone"></span><span class="mx-row-text"><span class="mx-row-title">提醒服务</span><span class="mx-row-summary" id="reminder-state">—</span></span></div>
+    <div class="mx-subpanel"><div class="mx-button-row"><button id="start" class="mx-button is-primary" type="button"><span data-icon="play"></span>启动</button><button id="pause" class="mx-button" type="button"><span data-icon="pause"></span>暂停</button></div></div>
+  </div>
+  <p class="mx-footnote">暂停提醒不会删除待处理记录，可在模块 WebUI 中继续处理。</p>
+  <div class="mx-small-title">关于</div>
+  <div class="mx-card about">
+    <div class="mx-row"><span class="mx-row-icon" data-icon="folder"></span><span class="mx-row-text"><span class="mx-row-title">文件管理助手</span><span class="mx-row-summary">配置与待处理由模块保存，通知与悬浮询问由助手提供</span></span><span class="mx-row-end">v1.10.0</span></div>
+  </div>
+</section>
+</main>
+
+<nav class="mx-navbar bottom-navigation" aria-label="助手功能"><div class="mx-navbar-inner">
+  <button data-nav="overview" class="mx-nav-item active" type="button" aria-current="page"><span class="mx-nav-icon" data-icon="home"></span><span>概览</span></button>
+  <button data-nav="monitor" class="mx-nav-item" type="button"><span class="mx-nav-icon" data-icon="watch"></span><span>监控</span></button>
+  <button data-nav="pending" class="mx-nav-item" type="button"><span class="mx-nav-icon" data-icon="transfer"><span class="mx-badge" id="pending-nav-badge" data-count="0"></span></span><span>待处理</span></button>
+  <button data-nav="settings" class="mx-nav-item" type="button"><span class="mx-nav-icon" data-icon="settings"></span><span>设置</span></button>
+</div></nav>
+
+<dialog id="confirmation" class="mx-dialog"><h2 id="confirmation-title" class="mx-dialog-title"></h2><p id="confirmation-text" class="mx-dialog-text"></p><div class="mx-dialog-actions dialog-actions"><button id="confirmation-cancel" class="mx-button" type="button">取消</button><button id="confirmation-ok" class="mx-button is-primary primary" type="button">确认</button></div></dialog>
+</body>
+</html>

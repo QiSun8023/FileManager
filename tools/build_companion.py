@@ -24,6 +24,11 @@ def main():
    if asset.is_file():z.write(asset,'assets/'+asset.name)
   editor=(ROOT/'module/webroot/watch-editor.js').read_text(encoding='utf8').replace('export ','')
   z.writestr('assets/watch-editor.js',editor+'\nwindow.FMWatchEditor={fileTypes,ruleRoots,renderRules,createDirectoryChooser};\n')
+  # Shared Miuix design system and icons from the module WebUI, so both surfaces stay identical.
+  for name in ('miuix.css','watch-editor.css'):
+   z.write(ROOT/'module/webroot'/name,'assets/'+name)
+  icons=(ROOT/'module/webroot/icons.js').read_text(encoding='utf8').replace('export ','')
+  z.writestr('assets/icons.js',icons+'\nwindow.FMIcons={icons,icon,hydrateIcons};\n')
  aligned=build/'aligned.apk';run([bt/'zipalign.exe','-f','4',unsigned,aligned])
  out=ROOT/'module/companion.apk';run([bt/'apksigner.bat','sign','--ks',keystore,'--ks-pass','file:'+str(pw),'--out',out,aligned]);run([bt/'apksigner.bat','verify','--verbose','--print-certs',out])
  (ROOT/'module/companion.sha256').write_text(hashlib.sha256(out.read_bytes()).hexdigest()+'\n',encoding='ascii',newline='\n');print('Built',out.name)
