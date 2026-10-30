@@ -31,6 +31,7 @@ type WatchRule struct {
 type WatchConfig struct {
 	Enabled       bool        `json:"enabled"`
 	StableSeconds int         `json:"stableSeconds"`
+	ReadyPolicy   int         `json:"readyPolicy"`
 	Rules         []WatchRule `json:"rules"`
 }
 type WatchEntry struct {
@@ -42,17 +43,18 @@ type WatchEntry struct {
 	Item     string `json:"item,omitempty"`
 }
 type WatchItem struct {
-	ID       string `json:"id"`
-	Path     string `json:"path"`
-	Target   string `json:"target"`
-	Rule     string `json:"rule"`
-	Size     int64  `json:"size"`
-	Modified int64  `json:"modified"`
-	Hash     string `json:"hash"`
-	At       int64  `json:"at"`
-	State    string `json:"state"`
-	Error    string `json:"error,omitempty"`
-	Verified bool   `json:"verified"`
+	ID         string `json:"id"`
+	Path       string `json:"path"`
+	Target     string `json:"target"`
+	TargetName string `json:"targetName,omitempty"`
+	Rule       string `json:"rule"`
+	Size       int64  `json:"size"`
+	Modified   int64  `json:"modified"`
+	Hash       string `json:"hash"`
+	At         int64  `json:"at"`
+	State      string `json:"state"`
+	Error      string `json:"error,omitempty"`
+	Verified   bool   `json:"verified"`
 }
 type WatchState struct {
 	Entries map[string]WatchEntry `json:"entries"`
@@ -62,8 +64,15 @@ type WatchState struct {
 }
 
 func (e *Engine) watchConfig() WatchConfig {
-	c := WatchConfig{StableSeconds: 60, Rules: []WatchRule{}}
+	c := WatchConfig{StableSeconds: 10, Rules: []WatchRule{}}
 	read(e.path("watch-config.json"), &c)
+	// Upgrade the previous fixed-delay policy in memory; keep baseline and decisions.
+	if c.ReadyPolicy == 0 {
+		if c.StableSeconds > 10 {
+			c.StableSeconds = 10
+		}
+		c.ReadyPolicy = 1
+	}
 	for i := range c.Rules {
 		c.Rules[i].Roots = watchRoots(c.Rules[i])
 		if len(c.Rules[i].Roots) > 0 {
@@ -87,11 +96,11 @@ func (e *Engine) watchState() (WatchState, error) {
 	return s, err
 }
 
-var extensionPattern = regexp.MustCompile(`^\.[a-z0-9]{1,12}$`)
+var extensionPattern = regexp.MustCompile(`^\.(?:[a-z0-9]{1,12}|apk\.1)$`)
 
 func (e *Engine) validateWatch(c WatchConfig) (WatchConfig, error) {
-	if c.StableSeconds < 30 || c.StableSeconds > 3600 {
-		return c, errors.New("稳定等待时间必须为 30–3600 秒")
+	if c.StableSeconds < 5 || c.StableSeconds > 3600 {
+		return c, errors.New("稳定等待时间必须为 5–3600 秒")
 	}
 	if c.Enabled && len(c.Rules) == 0 {
 		return c, errors.New("请至少添加一条监控规则")
@@ -99,6 +108,7 @@ func (e *Engine) validateWatch(c WatchConfig) (WatchConfig, error) {
 	if len(c.Rules) > 20 {
 		return c, errors.New("最多 20 条监控规则")
 	}
+	c.ReadyPolicy = 1
 	ids := map[string]bool{}
 	for i := range c.Rules {
 		r := &c.Rules[i]
@@ -233,7 +243,7 @@ func (e *Engine) watchFiles(c WatchConfig) (map[string]WatchEntry, error) {
 				}
 				match := false
 				for _, ext := range r.Extensions {
-					if strings.EqualFold(filepath.Ext(p), ext) {
+					if strings.HasSuffix(strings.ToLower(filepath.Base(p)), strings.ToLower(ext)) {
 						match = true
 						break
 					}
@@ -271,7 +281,7 @@ func (e *Engine) watchHash(path string) (string, error) {
 }
 func (e *Engine) archiveComplete(path string) (bool, error) {
 	ext := strings.ToLower(filepath.Ext(path))
-	if ext != ".zip" && ext != ".apk" {
+	if ext != ".zip" && ext != ".apk" && ext != ".apks" && ext != ".xapk" && ext != ".apkm" && !strings.HasSuffix(strings.ToLower(path), ".apk.1") {
 		return false, nil
 	}
 	file, err := openWatchFile(e.Storage, path, os.O_RDONLY, 0)
@@ -303,6 +313,13 @@ func (e *Engine) archiveComplete(path string) (bool, error) {
 		}
 	}
 	return true, nil
+}
+func watchTargetName(path string) string {
+	name := filepath.Base(path)
+	if strings.HasSuffix(strings.ToLower(name), ".apk.1") {
+		return name[:len(name)-6] + ".apk"
+	}
+	return name
 }
 func temporarySibling(path string) bool {
 	for _, ext := range []string{".part", ".tmp", ".download", ".crdownload", ".aria2", ".!qB", ".td"} {
@@ -349,7 +366,7 @@ func (e *Engine) watchTick(now time.Time) error {
 		if !exists {
 			v.Stable = now.Unix()
 			s.Entries[k] = v
-			continue
+			old = v
 		}
 		if old.Baseline {
 			continue
@@ -357,6 +374,9 @@ func (e *Engine) watchTick(now time.Time) error {
 		if old.Size != v.Size || old.Modified != v.Modified {
 			if old.Item != "" {
 				item := s.Items[old.Item]
+				if item.State == "pending" {
+					pendingCount--
+				}
 				item.State = "changed"
 				s.Items[item.ID] = item
 			}
@@ -364,7 +384,7 @@ func (e *Engine) watchTick(now time.Time) error {
 			s.Entries[k] = v
 			continue
 		}
-		if pendingCount >= 500 || old.Item != "" || now.Unix()-old.Stable < int64(c.StableSeconds) || v.Size == 0 || temporarySibling(v.Path) || watchWriting(v.Path) {
+		if pendingCount >= 500 || old.Item != "" || v.Size == 0 || temporarySibling(v.Path) || watchWriting(v.Path) {
 			continue
 		}
 		if err = safeRegular(v.Path); err != nil {
@@ -374,18 +394,23 @@ func (e *Engine) watchTick(now time.Time) error {
 		if er != nil {
 			continue
 		}
+		// Fully readable ZIP structures and CRCs allow immediate prompting. Other
+		// formats retain the configured stability fallback, never a completion claim.
+		if !verified && now.Unix()-old.Stable < int64(c.StableSeconds) {
+			continue
+		}
 		hash, er := e.watchHash(v.Path)
 		if er != nil {
 			continue
 		}
 		info, er := os.Stat(v.Path)
-		if er != nil || info.Size() != v.Size || info.ModTime().UnixNano() != v.Modified {
+		if er != nil || info.Size() != v.Size || info.ModTime().UnixNano() != v.Modified || temporarySibling(v.Path) || watchWriting(v.Path) {
 			continue
 		}
 		rule := rules[strings.SplitN(k, "|", 2)[0]]
 		id := token()
 		pendingCount++
-		s.Items[id] = WatchItem{ID: id, Path: v.Path, Target: rule.Target, Rule: rule.ID, Size: v.Size, Modified: v.Modified, Hash: hash, At: now.Unix(), State: "pending", Verified: verified}
+		s.Items[id] = WatchItem{ID: id, Path: v.Path, Target: rule.Target, TargetName: watchTargetName(v.Path), Rule: rule.ID, Size: v.Size, Modified: v.Modified, Hash: hash, At: now.Unix(), State: "pending", Verified: verified}
 		old.Item = id
 		s.Entries[k] = old
 	}
@@ -405,6 +430,7 @@ func (e *Engine) watchTick(now time.Time) error {
 	if len(s.Items) > 1000 {
 		items := []WatchItem{}
 		for _, v := range s.Items {
+			v.TargetName = watchTargetName(v.Path)
 			if v.State != "pending" {
 				items = append(items, v)
 			}
@@ -556,7 +582,7 @@ func (e *Engine) watchDecide(r Request) (any, error) {
 	if _, err = e.archiveComplete(v.Path); err != nil {
 		return nil, errors.New("压缩包不完整或校验失败")
 	}
-	dest := filepath.Join(v.Target, filepath.Base(v.Path))
+	dest := filepath.Join(v.Target, watchTargetName(v.Path))
 	if err = e.watchCopy(v.Path, dest, v.Hash); err != nil {
 		return nil, fmt.Errorf("未转移（目标同名时不会覆盖）：%w", err)
 	}
@@ -566,7 +592,7 @@ func (e *Engine) watchDecide(r Request) (any, error) {
 	}
 	current, er := os.Stat(v.Path)
 	again, he := e.watchHash(v.Path)
-	if er != nil || he != nil || watchWriting(v.Path) || !os.SameFile(info, current) || current.Size() != v.Size || current.ModTime().UnixNano() != v.Modified || again != v.Hash {
+	if er != nil || he != nil || temporarySibling(v.Path) || watchWriting(v.Path) || !os.SameFile(info, current) || current.Size() != v.Size || current.ModTime().UnixNano() != v.Modified || again != v.Hash {
 		removeWatchFile(e.Storage, dest, copied)
 		return nil, errors.New("复制期间源文件变化，源文件已保留")
 	}
@@ -654,6 +680,7 @@ func (e *Engine) watchDispatch(action string, r Request) (any, error) {
 		items := []WatchItem{}
 		history := []WatchItem{}
 		for _, v := range s.Items {
+			v.TargetName = watchTargetName(v.Path)
 			if v.State == "pending" {
 				items = append(items, v)
 			} else {

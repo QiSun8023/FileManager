@@ -69,8 +69,8 @@ func TestWatchBaselineStabilityAndRestart(t *testing.T) {
 	watchArchive(t, filepath.Join(src, "new.APK"))
 	tickWatch(t, e, now)
 	tickWatch(t, e, now.Add(29*time.Second))
-	if len(pendingWatch(t, e)) != 0 {
-		t.Fatal("premature prompt")
+	if len(pendingWatch(t, e)) != 1 {
+		t.Fatal("complete archive was delayed")
 	}
 	e = &Engine{Data: e.Data, Storage: e.Storage}
 	tickWatch(t, e, now.Add(31*time.Second))

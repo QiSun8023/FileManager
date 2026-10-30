@@ -41,6 +41,7 @@ func runWatchDaemon(e *Engine) error {
 	defer os.Remove(d + "/start")
 
 	lastWake := time.Time{}
+	woken := map[string]bool{}
 	for {
 		if _, err = os.Stat("/data/adb/modules/filemanager/disable"); err == nil {
 			return nil
@@ -58,19 +59,32 @@ func runWatchDaemon(e *Engine) error {
 		e.watchTick(time.Now())
 		s, er := e.watchState()
 		pending := false
+		newPending := false
+		active := map[string]bool{}
 		if er == nil {
 			for _, v := range s.Items {
 				if v.State == "pending" {
 					pending = true
-					break
+					active[v.ID] = true
+					if !woken[v.ID] {
+						newPending = true
+					}
 				}
 			}
 		}
-		if pending && time.Since(lastWake) > time.Minute {
-			exec.Command("am", "start-foreground-service", "-n", helperPackage+"/.MonitorService").Run()
+		if pending && (newPending || time.Since(lastWake) > 30*time.Second) {
+			cmd := exec.Command("am", "start-foreground-service", "-n", helperPackage+"/.MonitorService")
+			if out, er := cmd.CombinedOutput(); er == nil && !strings.Contains(string(out), "Error") {
+				woken = active
+			}
 			lastWake = time.Now()
 		}
-		time.Sleep(5 * time.Second)
+		for id := range woken {
+			if !active[id] {
+				delete(woken, id)
+			}
+		}
+		time.Sleep(2 * time.Second)
 		current, ce := os.Stat("/data/adb/modules/filemanager/bin/filemanager")
 		own, oe := os.Stat("/proc/self/exe")
 		if ce == nil && oe == nil && !os.SameFile(current, own) {

@@ -25,4 +25,5 @@ const keep=[...d.querySelectorAll('#watch-items button')].find(b=>b.textContent=
 console.log('PASS helper setup entry and keeping a pending file');
 click('nav-scan');await settle();assert.equal(d.getElementById('scan-panel').hidden,false);click('function-repair');await settle();assert.equal(d.getElementById('repair-panel').hidden,false);assert.equal(d.querySelector('[data-tab].active').id,'nav-scan');assert.equal(d.querySelector('#repair-panel .cleanbar').hidden,true);
 console.log('PASS previous duplicate/repair page switch and initially hidden file actions');
+assert.equal(d.querySelectorAll('details.type-group').length,0);assert.ok(d.querySelector('[data-extension=".apk.1"]'));
 dom.window.close();

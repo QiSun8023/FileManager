@@ -16,7 +16,8 @@ def main():
  run(['javac','-encoding','UTF-8','--release','17','-classpath',android,'-d',classes,*sorted((ROOT/'companion/src').rglob('*.java'))])
  jar=build/'classes.jar';run([Path(os.environ['JAVA_HOME'])/'bin/jar.exe','--create','--file',jar,'-C',classes,'.'])
  run([bt/'d8.bat','--release','--min-api','29','--lib',android,'--output',dex,jar])
- unsigned=build/'unsigned.apk';run([bt/'aapt2.exe','link','-I',android,'--manifest',ROOT/'companion/AndroidManifest.xml','-o',unsigned])
+ resources=build/'resources.zip';run([bt/'aapt2.exe','compile','--dir',ROOT/'companion/res','-o',resources])
+ unsigned=build/'unsigned.apk';run([bt/'aapt2.exe','link','-I',android,'--manifest',ROOT/'companion/AndroidManifest.xml','-o',unsigned,resources])
  with zipfile.ZipFile(unsigned,'a',compression=zipfile.ZIP_DEFLATED) as z:
   z.write(dex/'classes.dex','classes.dex')
   for asset in sorted((ROOT/'companion/assets').glob('*')):

@@ -5,4 +5,4 @@ DG_UPDATE_DIR=${0%/*}
 ui_print() { printf '%s\n' "$*"; }
 set_perm() { filemanager_set_perm "$@"; }
 set_perm_recursive() { filemanager_set_perm_recursive "$@"; }
-filemanager_deferred_update "$3" /data/adb/modules/filemanager /data/adb/dupeguard v1.9.0 "$4" "$1" "$2"
+filemanager_deferred_update "$3" /data/adb/modules/filemanager /data/adb/dupeguard v1.9.1 "$4" "$1" "$2"

@@ -60,7 +60,7 @@ def main():
     package = dist/f'FileManager-{version}-arm64.zip'
     with zipfile.ZipFile(package, 'w') as archive:
         for path in sorted((ROOT/'module').rglob('*')):
-            if not path.is_file():
+            if not path.is_file() or path.suffix == '.idsig':
                 continue
             name = path.relative_to(ROOT/'module').as_posix()
             data = path.read_bytes()

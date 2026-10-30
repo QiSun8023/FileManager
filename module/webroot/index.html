@@ -4,7 +4,7 @@
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; connect-src 'none'; object-src 'none'; base-uri 'none'">
 <meta name="color-scheme" content="light dark"><title>文件管理</title>
-<link rel="stylesheet" href="style.css?v=1.9.0"><script type="module" src="app.js?v=1.9.0"></script>
+<link rel="stylesheet" href="style.css?v=1.9.1"><script type="module" src="app.js?v=1.9.1"></script>
 </head>
 <body>
 <main>
@@ -39,7 +39,7 @@
 </section>
 <section id="trash-panel" role="tabpanel" aria-labelledby="nav-trash" hidden><div class="section-title"><h2>回收站</h2><button id="refresh-trash">刷新</button></div><p class="hint">移入回收站仍占用空间；彻底删除或卸载模块将永久清除回收文件。</p><div class="trash-summary" id="trash-summary">正在读取回收站…</div><div class="selection-tools"><button id="trash-all-toggle" class="selection-toggle" aria-pressed="false">全选</button></div><div id="trash-list"></div><div class="pagination"><button id="trash-prev">上一页</button><span id="trash-page">1</span><button id="trash-next">下一页</button></div><div class="trash-actions" hidden><span id="trash-selected">未选择文件</span><button id="restore">恢复所选</button><button class="danger" id="purge">彻底删除所选</button></div></section>
 <section id="watch-panel" role="tabpanel" aria-labelledby="nav-watch" hidden>
-<section class="card"><div class="section-title"><h2>新文件转移提醒</h2><button id="watch-helper" type="button">设置提醒权限</button></div><p class="hint">首次或重新启用时忽略已有文件；添加目录只为新目录建立基准。文件类型、目标或递归设置变化时重新记录已有文件。配置保存后生效。</p><label class="switch-row"><span>启用文件夹监控</span><input id="watch-enabled" role="switch" type="checkbox"></label><div class="scan-options"><label for="watch-stable">稳定等待</label><select id="watch-stable"><option value="30">30 秒</option><option value="60" selected>60 秒</option><option value="120">2 分钟</option><option value="300">5 分钟</option></select></div><p class="hint">ZIP／APK 额外检查压缩包完整性。其他格式仅依据稳定时间判断，下载暂停可能影响判断。目标同名文件不会覆盖。</p><div id="watch-rules"></div><div class="watch-toolbar"><button id="watch-add" type="button">添加规则</button><button id="watch-save" class="primary" type="button">保存配置</button></div><p id="watch-status" class="hint" role="status">正在读取配置…</p></section>
+<section class="card"><div class="section-title"><h2>新文件转移提醒</h2><button id="watch-helper" type="button">设置提醒权限</button></div><p class="hint">首次或重新启用时忽略已有文件；添加目录只为新目录建立基准。文件类型、目标或递归设置变化时重新记录已有文件。配置保存后生效。</p><label class="switch-row"><span>启用文件夹监控</span><input id="watch-enabled" role="switch" type="checkbox"></label><div class="scan-options"><label for="watch-stable">无法确认完成时等待</label><select id="watch-stable"><option value="5">5 秒</option><option value="10">10 秒（推荐）</option><option value="30">30 秒</option><option value="60">60 秒</option><option value="120">2 分钟</option><option value="300">5 分钟</option></select></div><p class="hint">ZIP／APK 完整性检查通过、无写入和下载临时记录时直接询问；其他格式短暂稳定等待后询问，请核对下载状态。APK.1 转移时改为 .apk，保留原处不改名。同名文件不会覆盖。</p><div id="watch-rules"></div><div class="watch-toolbar"><button id="watch-add" type="button">添加规则</button><button id="watch-save" class="primary" type="button">保存配置</button></div><p id="watch-status" class="hint" role="status">正在读取配置…</p></section>
 <section class="results"><div class="section-title"><h2>待转移文件 <small id="watch-count"></small></h2><button id="watch-refresh" type="button">刷新</button></div><p class="hint">选择保留后本次新增不再提醒；稍后处理时文件仍在原处。仅选择转移后移动文件。</p><div id="watch-items"></div></section><details class="disclosure"><summary>最近处理记录</summary><div id="watch-history"></div></details>
 </section>
 <section id="settings-panel" role="tabpanel" aria-labelledby="nav-settings" hidden>
@@ -55,10 +55,10 @@
 <label class="switch-row preference-row"><span class="preference-icon" data-icon="glass"></span><span class="preference-copy"><strong>玻璃效果</strong><small>为悬浮底栏增加透明层次</small></span><input type="checkbox" role="switch" id="display-glass"></label>
 </section>
 <div class="section-label">显示</div><section class="card settings-card scale-card"><div class="scale-heading"><div class="preference-copy"><label for="display-scale">界面缩放</label><small>调整文字和控件的显示比例</small></div><output id="display-scale-value" for="display-scale">100%</output></div><input id="display-scale" type="range" min="90" max="120" step="5" value="100" aria-label="界面缩放"></section>
-</details><div class="section-label">关于</div><section class="card settings-card"><div class="preference-row"><span class="preference-icon" data-icon="folder"></span><div class="preference-copy"><strong>文件管理</strong><small>卸载将清除回收站文件与模块记录</small></div><span class="version-label">v1.9.0</span></div></section>
+</details><div class="section-label">关于</div><section class="card settings-card"><div class="preference-row"><span class="preference-icon" data-icon="folder"></span><div class="preference-copy"><strong>文件管理</strong><small>卸载将清除回收站文件与模块记录</small></div><span class="version-label">v1.9.1</span></div></section>
 <p class="hint settings-note">外观偏好保存在当前 WebUI 宿主。清除宿主数据后会恢复默认设置。</p>
 </section>
-<footer>文件管理 1.9.0</footer>
+<footer>文件管理 1.9.1</footer>
 <dialog id="directory-picker" class="floating-dialog directory-dialog" aria-labelledby="picker-title"><div class="section-title"><h2 id="picker-title">选择文件夹</h2><button id="picker-close" type="button">取消</button></div><div id="picker-breadcrumbs" class="breadcrumbs"></div><p id="picker-path" class="hint"></p><p id="picker-status" class="hint" role="status"></p><div id="picker-list"></div><div class="pagination"><button id="picker-prev">上一页</button><span id="picker-page">1</span><button id="picker-next">下一页</button></div><div class="dialog-actions"><button id="picker-use" class="primary" type="button">选择当前目录</button></div></dialog>
 </main>
 <div class="navigation-dock"><nav aria-label="功能" role="tablist" class="bottom-navigation">

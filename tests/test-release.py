@@ -9,7 +9,7 @@ import tempfile
 root = Path(__file__).resolve().parents[1]
 with tempfile.TemporaryDirectory(prefix='filemanager-release-') as directory:
     target = Path(directory)/'FileManager'
-    shutil.copytree(root, target, ignore=shutil.ignore_patterns('bin', 'dist', '__pycache__', '.git'))
+    shutil.copytree(root, target, ignore=shutil.ignore_patterns('bin', 'dist', '__pycache__', '.git', 'node_modules', 'build'))
     metadata = dict(line.split('=',1) for line in (target/'module/module.prop').read_text(encoding='utf8').splitlines() if '=' in line)
     current = {'version': metadata['version'], 'versionCode': int(metadata['versionCode'])}
     script = target/'tools/set_version.py'
