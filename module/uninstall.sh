@@ -50,6 +50,19 @@ filemanager_uninstall() (
   [ ! -e "$fm_adb/modules_update/filemanager" ] && [ ! -L "$fm_adb/modules_update/filemanager" ] || { fm_error "新安装正在排队，已停止清理。"; exit 1; }
   if [ -e "$fm_data" ] || [ -L "$fm_data" ]; then
     [ -d "$fm_data" ] && fm_canonical "$fm_data" || exit 1
+  # Stop our observer before acquiring the shared mutation lock. No unrelated process is killed.
+  if [ "$fm_adb" = /data/adb ] && [ -d "$fm_data/watch-daemon" ]; then
+    [ ! -L "$fm_data/watch-stop" ] || exit 1
+    printf 1 > "$fm_data/watch-stop" || exit 1
+    fm_watch_wait=0
+    while :; do
+      fm_watch_pid=$(cat "$fm_data/watch-daemon/pid" 2>/dev/null)
+      case "$fm_watch_pid" in ''|*[!0-9]*|0) break ;; esac
+      kill -0 "$fm_watch_pid" 2>/dev/null || break
+      [ "$fm_watch_wait" -lt 30 ] || { fm_error "监控检查尚未结束，数据保留。"; exit 1; }
+      sleep 1; fm_watch_wait=$((fm_watch_wait+1))
+    done
+  fi
     if [ -e "$fm_data/lock" ] || [ -L "$fm_data/lock" ]; then
       fm_canonical "$fm_data/lock" && [ ! -L "$fm_data/lock/pid" ] || exit 1
       fm_pid=$(cat "$fm_data/lock/pid" 2>/dev/null)
@@ -100,6 +113,17 @@ filemanager_uninstall() (
   done
   # This parent is removed only when empty; other files below it are preserved.
   rmdir -- "$fm_storage/Android/FileManager" 2>/dev/null || true
+  # Remove only the exact helper APK we installed, verified against the recorded file hash.
+  if [ "$fm_adb" = /data/adb ] && [ -f "$fm_data/helper-installed-sha256" ]; then
+    fm_helper_path=$(pm path io.github.qisun8023.filemanager.helper 2>/dev/null | sed -n '1s/^package://p')
+    if [ -n "$fm_helper_path" ] && [ -f "$fm_helper_path" ]; then
+      fm_helper_hash=$(sha256sum "$fm_helper_path"); fm_helper_hash=${fm_helper_hash%% *}
+      if [ "$fm_helper_hash" = "$(cat "$fm_data/helper-installed-sha256")" ]; then
+        am force-stop io.github.qisun8023.filemanager.helper >/dev/null 2>&1
+        pm uninstall io.github.qisun8023.filemanager.helper >/dev/null 2>&1 || { fm_error "辅助应用未能卸载，私有记录保留。"; exit 1; }
+      fi
+    fi
+  fi
   if [ -d "$fm_data" ]; then rm -rf -- "$fm_data" || { fm_error "不能删除私有记录。"; exit 1; }; fi
   fm_owned_lock=0
   printf '%s\n' '文件管理：已清理回收文件、配置、索引、历史记录、日志和旧模块备份。'

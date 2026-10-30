@@ -47,6 +47,12 @@ def main():
             if path.name == 'index.html':
                 text = text.replace(f'文件管理 {old[1:]}', f'文件管理 {args.version[1:]}')
             path.write_text(text, encoding='utf8', newline='\n')
+    companion = ROOT/'companion/AndroidManifest.xml'
+    if companion.exists():
+        text = companion.read_text(encoding='utf8')
+        text = re.sub(r'android:versionCode="[0-9]+"', f'android:versionCode="{args.version_code}"', text)
+        text = re.sub(r'android:versionName="[^"]+"', f'android:versionName="{args.version[1:]}"', text)
+        companion.write_text(text, encoding='utf8', newline='\n')
     (ROOT/'update-filemanager.json').write_text(json.dumps(manifest(args.version, args.version_code), ensure_ascii=False, indent=2)+'\n', encoding='utf8', newline='\n')
     print(f'Prepared {args.version} ({args.version_code}). Edit CHANGELOG.md before committing and tagging.')
 

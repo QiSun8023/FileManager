@@ -12,3 +12,14 @@ __pycache__/
 .live-install-tests.*/
 
 .uninstall-tests.*/
+
+companion/build/
+module/companion.apk
+module/companion.apk.idsig
+*.p12
+*.jks
+*.keystore
+
+node_modules/
+
+.helper-tests.*/

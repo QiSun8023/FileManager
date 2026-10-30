@@ -1,0 +1,25 @@
+import assert from 'node:assert/strict';
+import {readFile} from 'node:fs/promises';import {JSDOM} from 'jsdom';
+const root=new URL('../module/webroot/',import.meta.url);
+const source=await readFile(new URL('app.js',root),'utf8'),html=await readFile(new URL('index.html',root),'utf8'),demoSource=await readFile(new URL('demo.js',root),'utf8');
+const {createDemo}=await import('data:text/javascript;base64,'+Buffer.from(demoSource).toString('base64'));
+let config={enabled:false,stableSeconds:60,rules:[]},pending=[{id:'a'.repeat(32),path:'/storage/emulated/0/Download/test.zip',target:'/storage/emulated/0/Documents',size:100,verified:true}],decisions=[];
+const demo=createDemo();let helperOpened=false;
+async function api(action,data={}){if(action==='watch-config')return structuredClone(config);if(action==='watch-status')return {enabled:config.enabled,running:config.enabled,updated:1739342415,items:pending,history:[]};if(action==='watch-save'){config=structuredClone(data.watch);return config;}if(action==='watch-decide'){decisions.push(data);pending=[];return {};}if(action==='helper-open'){helperOpened=true;return {}};return demo(action,data);}
+const dom=new JSDOM(html,{url:'https://mui.kernelsu.org/',runScripts:'outside-only'}),w=dom.window,d=w.document;
+w.ksu={exec(){}};w.createBackend=()=>api;w.createDemo=createDemo;w.initInterface=()=>{};w.initAppearance=()=>{};w.setInterval=()=>0;
+w.HTMLDialogElement.prototype.showModal=function(){this.open=true;};w.HTMLDialogElement.prototype.close=function(value){this.returnValue=value||'';this.open=false;this.dispatchEvent(new w.Event('close'));};
+w.eval(source.replace(/^import .*;\r?\n/gm,''));
+const settle=()=>new Promise(resolve=>setTimeout(resolve,30));const click=id=>d.getElementById(id).click();
+await settle();click('nav-watch');await settle();assert.equal(d.getElementById('watch-panel').hidden,false);assert.equal(d.getElementById('file-functions').hidden,true);assert.equal(d.querySelectorAll('[data-tab]').length,4);
+click('watch-add');assert.equal(d.querySelectorAll('.watch-rule').length,1);
+let folders=d.querySelectorAll('.watch-rule .path-field');folders[0].click();await settle();[...d.querySelectorAll('.directory-row')].find(e=>e.textContent.includes('Download')).click();await settle();click('picker-use');await settle();assert.match(folders[0].textContent,/Download$/);
+folders[1].click();await settle();[...d.querySelectorAll('.directory-row')].find(e=>e.textContent.includes('Documents')).click();await settle();click('picker-use');await settle();assert.match(folders[1].textContent,/Documents$/);
+const input=d.querySelector('.watch-rule input[type=text]');input.value='.ZIP, apk';input.dispatchEvent(new w.Event('input'));d.getElementById('watch-enabled').checked=true;click('watch-save');await settle();assert.equal(d.getElementById('confirm').open,true);d.getElementById('confirm').close('ok');await settle();assert.deepEqual(config.rules[0].extensions,['.ZIP','apk']);assert.equal(config.rules[0].root,'/storage/emulated/0/Download');assert.equal(config.rules[0].target,'/storage/emulated/0/Documents');assert.equal(config.enabled,true);
+console.log('PASS monitor navigation, folder-only picker, extension editing and confirmed configuration save');
+click('watch-helper');await settle();assert.equal(helperOpened,true);
+const keep=[...d.querySelectorAll('#watch-items button')].find(b=>b.textContent==='保留原处');keep.click();await settle();assert.deepEqual(structuredClone(decisions),[{id:'a'.repeat(32),decision:'keep'}]);assert.equal(d.querySelectorAll('#watch-items .watch-item').length,0);
+console.log('PASS helper setup entry and keeping a pending file');
+click('nav-scan');await settle();assert.equal(d.getElementById('scan-panel').hidden,false);click('function-repair');await settle();assert.equal(d.getElementById('repair-panel').hidden,false);assert.equal(d.querySelector('[data-tab].active').id,'nav-scan');assert.equal(d.querySelector('#repair-panel .cleanbar').hidden,true);
+console.log('PASS previous duplicate/repair page switch and initially hidden file actions');
+dom.window.close();

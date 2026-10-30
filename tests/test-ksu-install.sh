@@ -18,11 +18,11 @@ fixture() {
   printf 'other-module' > "$adb/modules_update/other/keep"
   printf 'QiSun8023/FileManager' > "$stage/filemanager-origin"
   printf 'QiSun8023/FileManager' > "$active/filemanager-origin"
-  printf 'id=filemanager\nversion=v1.7.3\n' > "$stage/module.prop"
-  printf '#!/bin/sh\nprintf '\''{"ok":true,"data":{"version":"v1.7.3"}}\\n'\''\n' > "$stage/bin/filemanager"; chmod 755 "$stage/bin/filemanager"
+  printf 'id=filemanager\nversion=v1.8.0\n' > "$stage/module.prop"
+  printf '#!/bin/sh\nprintf '\''{"ok":true,"data":{"version":"v1.8.0"}}\\n'\''\n' > "$stage/bin/filemanager"; chmod 755 "$stage/bin/filemanager"
   printf new-page > "$stage/webroot/index.html"; printf new-code > "$stage/webroot/app.js"
   for n in action.sh skip_mount LICENSE GO-LICENSE; do printf new > "$stage/$n"; done
-  for n in hot-install.sh live-install.sh update.sh post-install.sh uninstall.sh; do cp "$project/module/$n" "$stage/$n"; done
+  for n in hot-install.sh live-install.sh update.sh post-install.sh uninstall.sh service.sh companion-install.sh; do cp "$project/module/$n" "$stage/$n"; done
   printf token-one > "$stage/.filemanager-install-token"
   printf old-code > "$active/bin/filemanager"; printf old-page > "$active/webroot/index.html"
   # Emulate metadata that KernelSU writes after customize.sh returns.
@@ -51,14 +51,14 @@ KSU=''; [ "$(filemanager_mode)" = deferred ] || fail 'Magisk fallback'
 printf 'PASS native KernelSU, older KernelSU and Magisk mode selection\n'
 
 fixture
-filemanager_deferred_update "$stage" "$active" "$data" v1.7.3 token-one 0 0 || fail 'deferred update'
+filemanager_deferred_update "$stage" "$active" "$data" v1.8.0 token-one 0 0 || fail 'deferred update'
 ready
 printf 'PASS older KernelSU publishes WebUI and clears only its own pending files\n'
 
 fixture
 sleep 0.8 & installer=$!
 sleep 1.4 & parent=$!
-filemanager_deferred_update "$stage" "$active" "$data" v1.7.3 token-one "$installer" "$parent" > "$test_root/wait.log" 2>&1 & updater=$!
+filemanager_deferred_update "$stage" "$active" "$data" v1.8.0 token-one "$installer" "$parent" > "$test_root/wait.log" 2>&1 & updater=$!
 sleep 0.3
 [ "$(cat "$active/webroot/index.html")" = old-page ] || fail 'published before installer finished'
 wait "$installer"; sleep 0.2
@@ -69,28 +69,28 @@ printf 'PASS waits for both installer shell and finishing ksud process\n'
 
 fixture
 printf 'version=v1.2.0\n' > "$active/module.prop"
-if filemanager_deferred_update "$stage" "$active" "$data" v1.7.3 token-one 0 0; then fail 'unfinished installer accepted'; fi
+if filemanager_deferred_update "$stage" "$active" "$data" v1.8.0 token-one 0 0; then fail 'unfinished installer accepted'; fi
 [ "$(cat "$active/webroot/index.html")" = old-page ] || fail 'unfinished install replaced old page'
 [ -d "$stage" ] || fail 'unfinished install removed staging'
 kept
 printf 'PASS failed/incomplete installer is not falsely activated\n'
 
 fixture
-if filemanager_deferred_update "$stage" "$active" "$data" v1.7.3 wrong-token 0 0; then fail 'stale token accepted'; fi
+if filemanager_deferred_update "$stage" "$active" "$data" v1.8.0 wrong-token 0 0; then fail 'stale token accepted'; fi
 [ "$(cat "$active/webroot/index.html")" = old-page ] || fail 'stale update changed active module'
 kept
 printf 'PASS stale worker cannot publish a different installation\n'
 
 fixture
 mkdir "$data/lock"; printf '%s' "$$" > "$data/lock/pid"
-if filemanager_deferred_update "$stage" "$active" "$data" v1.7.3 token-one 0 0; then fail 'busy update accepted'; fi
+if filemanager_deferred_update "$stage" "$active" "$data" v1.8.0 token-one 0 0; then fail 'busy update accepted'; fi
 [ "$(cat "$active/webroot/index.html")" = old-page ] || fail 'busy update changed active module'
 kept
 printf 'PASS busy file operation remains protected\n'
 
 fixture
 cp -a "$stage/." "$active/"
-filemanager_ready "$active" "$data" v1.7.3 || fail 'native callback'
+filemanager_ready "$active" "$data" v1.8.0 || fail 'native callback'
 [ "$(head -n 1 "$data/install-status")" = ready ] || fail 'native status'
 [ ! -e "$active/update" ] || fail 'native own flag not cleared'
 [ ! -e "$active/action.sh" ] || fail 'native callback kept old action entry'
@@ -99,7 +99,7 @@ printf 'PASS native hot-install callback validates backend and WebUI\n'
 
 fixture
 cp -a "$stage/." "$active/"
-filemanager_deferred_update "$active" "$active" "$data" v1.7.3 token-one 0 0 || fail 'direct install'
+filemanager_deferred_update "$active" "$active" "$data" v1.8.0 token-one 0 0 || fail 'direct install'
 [ -f "$active/webroot/index.html" ] && [ ! -e "$active/update" ] || fail 'direct install damaged live files'
 kept
 printf 'PASS manager installing directly into live directory is supported\n'

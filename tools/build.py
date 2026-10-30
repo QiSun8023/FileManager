@@ -23,6 +23,7 @@ def main():
     parser.add_argument('--node', default='node')
     parser.add_argument('--bash', default='bash')
     args = parser.parse_args()
+    run([sys.executable, str(ROOT/'tools/build_companion.py')])
     prop = props()
     version, code = prop['version'], int(prop['versionCode'])
     update = manifest(version, code)
@@ -39,9 +40,9 @@ def main():
     run([sys.executable, str(ROOT/'tests/test-release.py')])
     run([args.go, 'test', './...'], ROOT/'engine', env)
     run([args.go, 'vet', './...'], ROOT/'engine', env)
-    for test in ('test-bridge.mjs', 'test-theme.mjs'):
+    for test in ('test-bridge.mjs', 'test-theme.mjs', 'test-watch-ui.mjs'):
         run([args.node, str(ROOT/'tests'/test)])
-    for test in ('test-live-install.sh', 'test-ksu-install.sh', 'test-legacy-install.sh', 'test-uninstall.sh'):
+    for test in ('test-live-install.sh', 'test-ksu-install.sh', 'test-legacy-install.sh', 'test-uninstall.sh', 'test-companion-install.sh'):
         run([args.bash, str(ROOT/'tests'/test)])
     for path in (ROOT/'module/webroot').glob('*.js'):
         run([args.node, '--check', str(path)])

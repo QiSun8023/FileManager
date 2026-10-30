@@ -3,8 +3,8 @@
 [ "$ARCH" = arm64 ] || abort "本版本仅支持 ARM64 Android 设备。"
 [ "$API" -ge 26 ] || abort "需要 Android 8.0 或更高版本。"
 set_perm "$MODPATH/bin/filemanager" 0 0 0755
-for DG_SCRIPT in update.sh post-install.sh uninstall.sh; do set_perm "$MODPATH/$DG_SCRIPT" 0 0 0755 || abort "设置脚本权限失败。"; done
-ui_print "文件管理 v1.7.3 · KernelSU 免重启适配"
+for DG_SCRIPT in update.sh post-install.sh uninstall.sh service.sh companion-install.sh; do set_perm "$MODPATH/$DG_SCRIPT" 0 0 0755 || abort "设置脚本权限失败。"; done
+ui_print "文件管理 v1.8.0 · KernelSU 免重启适配"
 if [ "$BOOTMODE" != true ]; then
   ui_print "当前为离线安装，正常启动手机后才能打开模块。"
 else
@@ -20,7 +20,7 @@ else
     kill -0 "$DG_BUSY_PID" 2>/dev/null && abort "文件任务正在运行，请停止或等待完成后重新安装。"
   fi
   DG_INFO=$("$MODPATH/bin/filemanager" info e30=)
-  printf '%s' "$DG_INFO" | grep -Fq '"version":"v1.7.3"' || abort "新版后端不能启动或版本不匹配。"
+  printf '%s' "$DG_INFO" | grep -Fq '"version":"v1.8.0"' || abort "新版后端不能启动或版本不匹配。"
   . "$MODPATH/hot-install.sh" || abort "缺少安装辅助脚本。"
   filemanager_check_existing "$MODPATH" /data/adb/modules/filemanager || abort "已存在其他来源的同标识模块，已取消，避免覆盖。"
   DG_TOKEN=$(cat /proc/sys/kernel/random/uuid)
@@ -50,7 +50,7 @@ else
 fi
 ui_print "安装完成后稍等数秒，刷新 KernelSU 模块列表再打开 WebUI。"
 ui_print "状态：/data/adb/dupeguard/install-status；日志：install.log。"
-ui_print "保留原有回收站与恢复记录，无需安装额外 APK。"
+ui_print "保留原有回收站与恢复记录；安装后自动安装文件管理助手。首次使用请允许 Root、通知与悬浮窗。"
 
 ui_print "标识已改为 filemanager；沿用原私有数据目录，回收站及修复记录保留。"
 

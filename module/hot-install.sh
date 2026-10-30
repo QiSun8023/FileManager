@@ -69,6 +69,12 @@ filemanager_ready() {
   rm -f -- "$dg_ready_active/update" || return 1
   rm -f -- "$dg_ready_active/action.sh" || return 1
   filemanager_retire_legacy "$dg_ready_active" "$dg_ready_data" || return 1
+  # Optional helper is activated only for the real Android module path (test fixtures do not install apps).
+  if [ "$dg_ready_active" = /data/adb/modules/filemanager ] && [ -f "$dg_ready_active/companion-install.sh" ]; then
+    . "$dg_ready_active/companion-install.sh" || return 1
+    filemanager_install_companion "$dg_ready_active" || printf '%s\n' '辅助应用未安装成功，请查看 helper-status。' >&2
+    filemanager_start_monitor "$dg_ready_active" || printf '%s\n' '后台监控暂未启动，可在 WebUI 重新保存配置。' >&2
+  fi
   filemanager_status "$dg_ready_data" ready "$dg_ready_expected 已就绪，请刷新 KernelSU 模块列表并打开 WebUI。"
 }
 filemanager_deferred_update() (

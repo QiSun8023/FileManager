@@ -54,19 +54,21 @@ type Status struct {
 	Updated int64  `json:"updated"`
 }
 type Request struct {
-	Revision   string   `json:"revision"`
-	Mode       string   `json:"mode"`
-	ID         string   `json:"id"`
-	Checked    bool     `json:"checked"`
-	Job        string   `json:"job,omitempty"`
-	RepairTime bool     `json:"repairTime"`
-	RenameAAC  bool     `json:"renameAAC"`
-	Zone       string   `json:"zone"`
-	Root       string   `json:"root"`
-	Min        int64    `json:"min"`
-	Scan       string   `json:"scan"`
-	IDs        []string `json:"ids"`
-	Page       int      `json:"page"`
+	Watch      *WatchConfig `json:"watch,omitempty"`
+	Decision   string       `json:"decision,omitempty"`
+	Revision   string       `json:"revision"`
+	Mode       string       `json:"mode"`
+	ID         string       `json:"id"`
+	Checked    bool         `json:"checked"`
+	Job        string       `json:"job,omitempty"`
+	RepairTime bool         `json:"repairTime"`
+	RenameAAC  bool         `json:"renameAAC"`
+	Zone       string       `json:"zone"`
+	Root       string       `json:"root"`
+	Min        int64        `json:"min"`
+	Scan       string       `json:"scan"`
+	IDs        []string     `json:"ids"`
+	Page       int          `json:"page"`
 }
 type Trash struct {
 	Selected bool   `json:"selected"`
@@ -689,6 +691,9 @@ func copyExclusive(src, dst, hash string) (err error) {
 	return nil
 }
 func (e *Engine) dispatch(action string, r Request) (any, error) {
+	if strings.HasPrefix(action, "watch-") || action == "helper-open" {
+		return e.watchDispatch(action, r)
+	}
 	switch action {
 	case "status":
 		var s Status
@@ -941,6 +946,10 @@ func main() {
 			rel, _ := filepath.Rel("/storage/emulated/0", r.Root)
 			r.Root = filepath.Join(real, rel)
 		}
+	}
+	if os.Args[1] == "watch-daemon" {
+		output(nil, e.watchDaemon())
+		return
 	}
 	if os.Args[1] == "worker" {
 		for i := 0; i < 100; i++ {
