@@ -1,7 +1,7 @@
 {
-  "version": "v1.7.3",
-  "versionCode": 10703,
-  "zipUrl": "https://github.com/QiSun8023/FileManager/releases/download/v1.7.3/FileManager-v1.7.3-arm64.zip",
-  "changelog": "https://raw.githubusercontent.com/QiSun8023/FileManager/v1.7.3/CHANGELOG.md"
+  "version": "v1.8.0",
+  "versionCode": 10800,
+  "zipUrl": "https://github.com/QiSun8023/FileManager/releases/download/v1.8.0/FileManager-v1.8.0-arm64.zip",
+  "changelog": "https://raw.githubusercontent.com/QiSun8023/FileManager/v1.8.0/CHANGELOG.md"
 }
 
