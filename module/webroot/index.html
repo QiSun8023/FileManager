@@ -6,10 +6,10 @@
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; connect-src 'none'; object-src 'none'; base-uri 'none'">
 <meta name="color-scheme" content="light dark">
 <title>文件管理</title>
-<link rel="stylesheet" href="miuix.css?v=1.10.0">
-<link rel="stylesheet" href="watch-editor.css?v=1.10.0">
-<link rel="stylesheet" href="style.css?v=1.10.0">
-<script type="module" src="app.js?v=1.10.0"></script>
+<link rel="stylesheet" href="miuix.css?v=1.11.0">
+<link rel="stylesheet" href="watch-editor.css?v=1.11.0">
+<link rel="stylesheet" href="style.css?v=1.11.0">
+<script type="module" src="app.js?v=1.11.0"></script>
 </head>
 <body>
 <header class="mx-topbar" id="topbar">
@@ -43,7 +43,7 @@
       <div class="mx-chips presets"><button class="mx-chip" type="button" data-root="/storage/emulated/0/Download">下载</button><button class="mx-chip" type="button" data-root="/storage/emulated/0/DCIM">相机</button><button class="mx-chip" type="button" data-root="/storage/emulated/0/Pictures">图片</button><button class="mx-chip" type="button" data-root="/storage/emulated/0">全部存储</button></div>
       <div id="recent-scan" class="mx-chips recent-dirs"></div>
     </div>
-    <label class="mx-row" for="min"><span class="mx-row-icon" data-icon="file"></span><span class="mx-row-text"><span class="mx-row-title">最小文件大小</span><span class="mx-row-summary">跳过 Android、隐藏目录和符号链接，最多 20 万个文件</span></span><select id="min" class="mx-select"><option value="1">全部非空文件</option><option value="102400">100 KB</option><option value="1048576">1 MB</option><option value="10485760">10 MB</option></select></label>
+    <label class="mx-row mx-setting-row" for="min"><span class="mx-row-icon" data-icon="file"></span><span class="mx-row-text"><span class="mx-row-title">最小文件大小</span></span><select id="min" class="mx-select"><option value="1">全部非空文件</option><option value="102400">100 KB</option><option value="1048576">1 MB</option><option value="10485760">10 MB</option></select></label>
     <div class="mx-subpanel scan-actions">
       <div class="progress mx-progress" id="progress" hidden><span></span></div>
       <p id="status" class="status-line" aria-live="polite">准备就绪</p>
@@ -88,13 +88,13 @@
 
 <section id="watch-panel" role="tabpanel" aria-labelledby="nav-watch" hidden>
   <div class="mx-card">
-    <label class="mx-row"><span class="mx-row-icon" data-icon="watch"></span><span class="mx-row-text"><span class="mx-row-title">新文件转移提醒</span><span class="mx-row-summary" id="watch-status" role="status">正在读取配置…</span></span><input id="watch-enabled" class="mx-switch" role="switch" type="checkbox"></label>
+    <label class="mx-row"><span class="mx-row-icon" data-icon="watch"></span><span class="mx-row-text"><span class="mx-row-title">新文件转移提醒</span><span class="mx-row-summary" id="watch-status" role="status">正在读取配置…</span></span><input id="watch-enabled" disabled class="mx-switch" role="switch" type="checkbox"></label>
     <button id="watch-helper" class="mx-row" type="button"><span class="mx-row-icon" data-icon="bell"></span><span class="mx-row-text"><span class="mx-row-title">提醒权限</span><span class="mx-row-summary">在文件管理助手中允许 Root、通知和悬浮窗</span></span><span class="mx-row-end" data-icon="chevron"></span></button>
-    <label class="mx-row" for="watch-stable"><span class="mx-row-icon" data-icon="clock"></span><span class="mx-row-text"><span class="mx-row-title">无法确认完成时等待</span><span class="mx-row-summary">ZIP／APK 检查完整后立即询问</span></span><select id="watch-stable" class="mx-select"><option value="5">5 秒</option><option value="10">10 秒（推荐）</option><option value="30">30 秒</option><option value="60">60 秒</option><option value="120">2 分钟</option><option value="300">5 分钟</option></select></label>
+    <label class="mx-row mx-setting-row" for="watch-stable"><span class="mx-row-icon" data-icon="clock"></span><span class="mx-row-text"><span class="mx-row-title">无法确认完成时等待</span></span><select id="watch-stable" class="mx-select"><option value="5">5 秒</option><option value="10">10 秒</option><option value="30">30 秒</option><option value="60">60 秒</option><option value="120">2 分钟</option><option value="300">5 分钟</option></select></label>
   </div>
-  <p class="mx-footnote">首次启用或新增目录时忽略已有文件。APK.1 转移时改名为 .apk，同名文件不会覆盖。</p>
   <div class="mx-small-title has-action"><span>监控规则</span><button id="watch-add" class="mx-button is-text" type="button"><span data-icon="plus" data-icon-size="18"></span>添加规则</button></div>
   <div id="watch-rules"></div>
+  <p id="watch-save-result" class="mx-footnote" role="status" hidden></p>
   <div class="mx-section-actions"><button id="watch-save" class="mx-button is-primary is-block" type="button"><span data-icon="save"></span>保存配置</button></div>
   <section class="results">
     <div class="mx-small-title has-action"><span>待转移文件 <span id="watch-count"></span></span><button id="watch-refresh" class="mx-icon-button" type="button" aria-label="刷新待转移文件" title="刷新" data-icon="refresh"></button></div>
@@ -120,7 +120,7 @@
   <div class="mx-card">
     <button id="appearance-scheme" class="mx-row" type="button" aria-haspopup="dialog" value="system"><span class="mx-row-icon" data-icon="scheme"></span><span class="mx-row-text"><span class="mx-row-title">深色模式</span></span><span class="mx-row-end"><span id="appearance-scheme-value">跟随系统</span><span data-icon="chevron"></span></span></button>
     <label class="mx-row"><span class="mx-row-icon" data-icon="palette"></span><span class="mx-row-text"><span class="mx-row-title">Monet 动态配色</span><span class="mx-row-summary">使用 WebUI 宿主提供的主题颜色</span></span><input type="checkbox" role="switch" class="mx-switch" id="appearance-monet"></label>
-    <div class="mx-subpanel monet-panel"><p id="appearance-status" class="status-line" role="status"></p><button id="appearance-retry" class="mx-button is-small is-tonal" type="button" hidden><span data-icon="refresh" data-icon-size="16"></span>重新读取配色</button></div>
+    <div class="mx-subpanel monet-panel"><p id="appearance-status" class="status-line" role="status"></p></div>
     <div class="mx-row palette-row"><span class="mx-row-icon" data-icon="glass"></span><span class="mx-row-text"><span class="mx-row-title">强调色</span><div id="accent-palette" class="accent-palette" role="group" aria-label="强调色"></div></span></div>
   </div>
   <div class="mx-small-title">显示</div>
@@ -132,11 +132,11 @@
   </div>
   <div class="mx-small-title">关于</div>
   <div class="mx-card">
-    <div class="mx-row"><span class="mx-row-icon" data-icon="folder"></span><span class="mx-row-text"><span class="mx-row-title">文件管理</span><span class="mx-row-summary">卸载将清除回收站文件与模块记录</span></span><span class="mx-row-end version-label">v1.10.0</span></div>
+    <div class="mx-row"><span class="mx-row-icon" data-icon="folder"></span><span class="mx-row-text"><span class="mx-row-title">文件管理</span><span class="mx-row-summary">卸载将清除回收站文件与模块记录</span></span><span class="mx-row-end version-label">v1.11.0</span></div>
   </div>
   <p class="mx-footnote">外观偏好保存在当前 WebUI 宿主，清除宿主数据后恢复默认。</p>
 </section>
-<footer class="mx-footnote app-footer">文件管理 1.10.0</footer>
+<footer class="mx-footnote app-footer">文件管理 1.11.0</footer>
 </main>
 
 <nav class="mx-navbar navigation-dock" aria-label="功能"><div class="mx-navbar-inner bottom-navigation" role="tablist">

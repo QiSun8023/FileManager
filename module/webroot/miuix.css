@@ -309,3 +309,18 @@ dialog.mx-dialog::backdrop { background: var(--mx-scrim); }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation-duration: .01ms !important; transition-duration: .01ms !important; }
 }
+
+/* Keep settings and their controls on one row, including narrow phone WebViews. */
+label.mx-row { flex-wrap: nowrap; }
+label.mx-row > input[type="checkbox"] { flex: none; align-self: center; }
+label.mx-row .mx-row-title { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.mx-setting-row { gap: 10px; }
+.mx-setting-row .mx-row-title { font-size: 15px; }
+.mx-setting-row > .mx-select { flex: 0 1 auto; min-width: 0; max-width: 45%; font-size: 14px; padding-left: 8px; padding-right: 26px; }
+@media (max-width: 380px) {
+  label.mx-row { gap: 10px; padding-right: 12px; padding-left: 12px; }
+  label.mx-row .mx-row-title { font-size: 14px; }
+  .mx-setting-row > .mx-row-icon { display: none; }
+  .mx-setting-row .mx-row-title { font-size: 13px; }
+  .mx-setting-row > .mx-select { max-width: 46%; font-size: 13px; }
+}

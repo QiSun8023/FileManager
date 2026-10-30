@@ -1,7 +1,7 @@
 id=filemanager
 name=文件管理
-version=v1.10.0
-versionCode=11000
+version=v1.11.0
+versionCode=11100
 author=SunQi & Codex
-description=Miuix 风格 WebUI 与助手；支持内容查重、文件修复、回收站，以及新增文件转移提醒。
+description=Miuix 文件管理；支持查重、修复、回收站、新文件转移提醒及实时更新；监控总开关立即保存。
 updateJson=https://raw.githubusercontent.com/QiSun8023/FileManager/main/update-filemanager.json

@@ -83,16 +83,24 @@ export function renderRules(box, rules, {chooseSources, chooseTarget}) {
     const groups = [...fileTypes.map(([name, types]) => [name, types.map(t => '.' + t)]), ...(extras.length ? [['已有的其他类型', extras]] : [])];
     for (const [name, types] of groups) {
       const section = el('section', 'type-group'), title = el('div', 'type-group-title');
-      const countText = () => { const n = types.filter(t => rule.extensions.includes(t)).length; return n ? `已选 ${n}` : ''; };
-      title.append(el('span', '', name), el('span', 'muted', countText()));
+      const toggleAll = button('type-select-all mx-button is-text is-small');
+      const allSelected = () => types.every(t => rule.extensions.includes(t));
+      const updateToggle = () => { const all = allSelected(); toggleAll.textContent = all ? '取消全选' : '全选'; toggleAll.setAttribute('aria-label', (all ? '取消全选' : '全选') + name); toggleAll.setAttribute('aria-pressed', String(all)); };
+      updateToggle();
+      title.append(el('span', '', name), toggleAll);
       const chips = el('div', 'type-chips mx-chips');
+      toggleAll.addEventListener('click', () => {
+        rule.extensions = allSelected() ? rule.extensions.filter(t => !types.includes(t)) : [...new Set([...rule.extensions, ...types])];
+        for (const chip of chips.children) chip.setAttribute('aria-pressed', String(rule.extensions.includes(chip.dataset.extension)));
+        updateToggle(); headText.lastChild.textContent = summary();
+      });
       for (const ext of types) {
         const b = button('type-chip mx-chip', ext.slice(1).toUpperCase());
         b.dataset.extension = ext; b.setAttribute('aria-pressed', String(rule.extensions.includes(ext)));
         b.addEventListener('click', () => {
           rule.extensions = rule.extensions.includes(ext) ? rule.extensions.filter(t => t !== ext) : [...rule.extensions, ext];
           b.setAttribute('aria-pressed', String(rule.extensions.includes(ext)));
-          title.lastChild.textContent = countText(); headText.lastChild.textContent = summary();
+          updateToggle(); headText.lastChild.textContent = summary();
         });
         chips.append(b);
       }

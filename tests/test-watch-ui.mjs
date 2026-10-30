@@ -5,7 +5,7 @@ const source=await readFile(new URL('app.js',root),'utf8'),html=await readFile(n
 const {createDemo}=await import('data:text/javascript;base64,'+Buffer.from(demoSource).toString('base64'));
 let config={enabled:false,stableSeconds:60,rules:[]},pending=[{id:'a'.repeat(32),path:'/storage/emulated/0/Download/test.zip',target:'/storage/emulated/0/Documents',size:100,verified:true}],decisions=[];
 const demo=createDemo();let helperOpened=false;
-async function api(action,data={}){if(action==='watch-config')return structuredClone(config);if(action==='watch-status')return {enabled:config.enabled,running:config.enabled,updated:1739342415,items:pending,history:[]};if(action==='watch-save'){config=structuredClone(data.watch);return config;}if(action==='watch-decide'){decisions.push(data);pending=[];return {};}if(action==='helper-open'){helperOpened=true;return {}};return demo(action,data);}
+async function api(action,data={}){if(action==='watch-config')return structuredClone(config);if(action==='watch-status')return {enabled:config.enabled,running:config.enabled,rules:config.rules.length,updated:1739342415,items:pending,history:[]};if(action==='watch-enable'){config.enabled=data.checked;return structuredClone(config);}if(action==='watch-save'){config=structuredClone(data.watch);return config;}if(action==='watch-decide'){decisions.push(data);pending=[];return {};}if(action==='helper-open'){helperOpened=true;return {}};return demo(action,data);}
 const dom=new JSDOM(html,{url:'https://mui.kernelsu.org/',runScripts:'outside-only'}),w=dom.window,d=w.document;
 w.ksu={exec(){}};w.createBackend=()=>api;w.createDemo=createDemo;w.initInterface=()=>{};w.initAppearance=()=>{};w.setInterval=()=>0;
 w.HTMLDialogElement.prototype.showModal=function(){this.open=true;};w.HTMLDialogElement.prototype.close=function(value){this.returnValue=value||'';this.open=false;this.dispatchEvent(new w.Event('close'));};
@@ -13,6 +13,9 @@ const editorSource=await readFile(new URL('watch-editor.js',root),'utf8');w.eval
 w.eval(source.replace(/^import .*;\r?\n/gm,''));
 const settle=()=>new Promise(resolve=>setTimeout(resolve,30));const click=id=>d.getElementById(id).click();
 await settle();click('nav-watch');await settle();assert.equal(d.getElementById('watch-panel').hidden,false);assert.equal(d.getElementById('file-functions').hidden,true);assert.equal(d.querySelectorAll('[data-tab]').length,4);
+click('watch-enabled');await settle();assert.equal(config.enabled,true);assert.equal(config.rules.length,0);assert.match(d.getElementById('watch-status').textContent,/等待添加监控目录/);assert.equal(d.getElementById('confirm').open,false);
+click('watch-enabled');await settle();assert.equal(config.enabled,false);
+console.log('PASS master switch persists before adding directories, without a save confirmation');
 click('watch-add');assert.equal(d.querySelectorAll('.watch-rule').length,1);
 d.querySelector('.watch-add-sources').click();await settle();let chooser=d.querySelector('.watch-directory-dialog');
 function checkFolder(name){const c=chooser.querySelector(`input[aria-label="选择 ${name}"]`);assert.ok(c);c.checked=true;c.dispatchEvent(new w.Event('change'));}
@@ -26,4 +29,6 @@ console.log('PASS helper setup entry and keeping a pending file');
 click('nav-scan');await settle();assert.equal(d.getElementById('scan-panel').hidden,false);click('function-repair');await settle();assert.equal(d.getElementById('repair-panel').hidden,false);assert.equal(d.querySelector('[data-tab].active').id,'nav-scan');assert.equal(d.querySelector('#repair-panel .cleanbar').hidden,true);
 console.log('PASS previous duplicate/repair page switch and initially hidden file actions');
 assert.equal(d.querySelectorAll('details.type-group').length,0);assert.ok(d.querySelector('[data-extension=".apk.1"]'));
+const group=d.querySelector('.type-group');const toggle=group.querySelector('.type-select-all');toggle.click();assert.equal(toggle.textContent,'取消全选');assert.ok([...group.querySelectorAll('[data-extension]')].every(b=>b.getAttribute('aria-pressed')==='true'));toggle.click();assert.equal(toggle.textContent,'全选');assert.ok([...group.querySelectorAll('[data-extension]')].every(b=>b.getAttribute('aria-pressed')==='false'));group.querySelector('[data-extension]').click();assert.equal(toggle.textContent,'全选');assert.equal(group.querySelector('[data-extension]').getAttribute('aria-pressed'),'true');assert.doesNotMatch(group.textContent,/已选\s*\d/);
+console.log('PASS type groups support select-all, clear-all and individual choices without count labels');
 dom.window.close();

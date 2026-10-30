@@ -1,4 +1,4 @@
-const actions = new Set(['info','start','status','groups','trash','cancel','clean','restore','purge','repairs','repair-apply','directories','select','select-items','job-result','watch-config','watch-save','watch-status','watch-decide','watch-start','helper-open']);
+const actions = new Set(['info','start','status','groups','trash','cancel','clean','restore','purge','repairs','repair-apply','directories','select','select-items','job-result','watch-config','watch-enable','watch-save','watch-status','watch-decide','watch-start','helper-open']);
 
 function encoded(data) {
   const bytes = new TextEncoder().encode(JSON.stringify(data));

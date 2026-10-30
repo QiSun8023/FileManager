@@ -14,8 +14,8 @@
 .watch-rule .path-field .placeholder { color: var(--mx-summary); }
 .watch-rule .path-field::before { display: none; }
 .type-group + .type-group { margin-top: 12px; }
-.type-group-title { display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 14px; font-weight: 500; }
-.type-group-title .muted { color: var(--mx-primary); font-size: 13px; }
+.type-group-title { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 4px; font-size: 14px; font-weight: 500; }
+.type-select-all { flex: none; min-height: 32px; padding: 4px 8px; font-size: 13px; white-space: nowrap; }
 .type-chips .mx-chip { min-width: 56px; justify-content: center; }
 .watch-recursive { border-top: .5px solid var(--mx-divider); }
 .watch-delete-rule { color: var(--mx-error); }

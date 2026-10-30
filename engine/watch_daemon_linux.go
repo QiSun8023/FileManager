@@ -72,11 +72,16 @@ func runWatchDaemon(e *Engine) error {
 				}
 			}
 		}
-		if pending && (newPending || time.Since(lastWake) > 30*time.Second) {
-			cmd := exec.Command("am", "start-foreground-service", "-n", helperPackage+"/.MonitorService")
-			if out, er := cmd.CombinedOutput(); er == nil && !strings.Contains(string(out), "Error") {
-				woken = active
+		// Arm reminders when monitoring starts, instead of waiting for the first file.
+		// Retry pending reminders at most every 30 seconds after a failed attempt.
+		if lastWake.IsZero() || pending && (newPending || time.Since(lastWake) > 30*time.Second) {
+			message := "已发送提醒服务启动请求；实际通知仍取决于助手及系统运行状态。"
+			if er := runHelperWake(8*time.Second, "am", "start-foreground-service", "-n", helperPackage+"/.MonitorService"); er != nil {
+				message = er.Error()
+				fmt.Fprintln(os.Stderr, time.Now().Format(time.RFC3339), message)
 			}
+			os.WriteFile(e.path("helper-wake-status"), []byte(message), 0600)
+			woken = active
 			lastWake = time.Now()
 		}
 		for id := range woken {

@@ -50,12 +50,12 @@
 
 <section id="monitor" class="page" hidden>
   <div class="mx-card">
-    <label class="mx-row switch-row"><span class="mx-row-icon" data-icon="watch"></span><span class="mx-row-text"><span class="mx-row-title">启用文件夹监控</span><span class="mx-row-summary">每条规则可选多个来源目录</span></span><input id="enabled" class="mx-switch" type="checkbox" role="switch"></label>
-    <label class="mx-row" for="stable"><span class="mx-row-icon" data-icon="clock"></span><span class="mx-row-text"><span class="mx-row-title">无法确认完成时等待</span><span class="mx-row-summary">ZIP／APK 检查完整后立即询问</span></span><select id="stable" class="mx-select"><option value="5">5 秒</option><option value="10">10 秒（推荐）</option><option value="30">30 秒</option><option value="60">60 秒</option><option value="120">2 分钟</option><option value="300">5 分钟</option></select></label>
+    <label class="mx-row switch-row"><span class="mx-row-icon" data-icon="watch"></span><span class="mx-row-text"><span class="mx-row-title">启用文件夹监控</span><span class="mx-row-summary"><span id="monitor-state">可先开启，再添加监控目录</span></span></span><input id="enabled" disabled class="mx-switch" type="checkbox" role="switch"></label>
+    <label class="mx-row mx-setting-row" for="stable"><span class="mx-row-icon" data-icon="clock"></span><span class="mx-row-text"><span class="mx-row-title">无法确认完成时等待</span></span><select id="stable" class="mx-select"><option value="5">5 秒</option><option value="10">10 秒</option><option value="30">30 秒</option><option value="60">60 秒</option><option value="120">2 分钟</option><option value="300">5 分钟</option></select></label>
   </div>
-  <p class="mx-footnote">新增目录会忽略其中已有文件。APK.1 转移时改名为 .apk，同名文件不会覆盖。</p>
   <div class="mx-small-title has-action"><span>规则</span><button id="add" class="mx-button is-text" type="button"><span data-icon="plus" data-icon-size="18"></span>添加规则</button></div>
   <div id="rules"></div>
+  <p id="save-result" class="mx-footnote" role="status" hidden></p>
   <div class="mx-section-actions"><button id="save" class="mx-button is-primary is-block" type="button"><span data-icon="save"></span>保存规则</button></div>
 </section>
 
@@ -69,6 +69,7 @@
   <div class="mx-small-title">提醒权限</div>
   <div class="mx-card">
     <button id="notification-setting" class="mx-row" type="button"><span class="mx-row-icon" data-icon="bell"></span><span class="mx-row-text"><span class="mx-row-title">通知</span><span class="mx-row-summary" id="notification-status">检查中</span></span><span class="mx-row-end" data-icon="chevron"></span></button>
+    <button id="live-setting" class="mx-row" type="button"><span class="mx-row-icon" data-icon="bell"></span><span class="mx-row-text"><span class="mx-row-title">实时更新 / 流体云</span><span class="mx-row-summary" id="live-status">检查中</span></span><span class="mx-row-end" data-icon="chevron"></span></button>
     <button id="overlay-setting" class="mx-row" type="button"><span class="mx-row-icon" data-icon="overlay"></span><span class="mx-row-text"><span class="mx-row-title">悬浮询问</span><span class="mx-row-summary" id="overlay-status">检查中</span></span><span class="mx-row-end" data-icon="chevron"></span></button>
     <button id="battery-setting" class="mx-row" type="button"><span class="mx-row-icon" data-icon="battery"></span><span class="mx-row-text"><span class="mx-row-title">后台运行</span><span class="mx-row-summary">在应用信息中允许后台活动与自启动</span></span><span class="mx-row-end" data-icon="chevron"></span></button>
   </div>
@@ -81,7 +82,7 @@
   <p class="mx-footnote">暂停提醒不会删除待处理记录，可在模块 WebUI 中继续处理。</p>
   <div class="mx-small-title">关于</div>
   <div class="mx-card about">
-    <div class="mx-row"><span class="mx-row-icon" data-icon="folder"></span><span class="mx-row-text"><span class="mx-row-title">文件管理助手</span><span class="mx-row-summary">配置与待处理由模块保存，通知与悬浮询问由助手提供</span></span><span class="mx-row-end">v1.10.0</span></div>
+    <div class="mx-row"><span class="mx-row-icon" data-icon="folder"></span><span class="mx-row-text"><span class="mx-row-title">文件管理助手</span><span class="mx-row-summary">配置与待处理由模块保存，通知与悬浮询问由助手提供</span></span><span class="mx-row-end">v1.11.0</span></div>
   </div>
 </section>
 </main>

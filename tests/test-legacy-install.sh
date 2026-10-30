@@ -9,7 +9,7 @@ count=0
 fixture() {
   count=$((count+1)); adb="$root/case-$count/adb"; data="$adb/dupeguard"; active="$adb/modules/filemanager"; old="$adb/modules/dupeguard"
   mkdir -p "$data/repairs" "$active/bin" "$active/webroot" "$adb/modules/other"
-  printf 'id=filemanager\nversion=v1.10.0\n' > "$active/module.prop"
+  printf 'id=filemanager\nversion=v1.11.0\n' > "$active/module.prop"
   printf 'private-record' > "$data/repairs/record"
   printf 'unrelated' > "$adb/modules/other/keep"
 }
@@ -42,7 +42,7 @@ echo 'PASS pending legacy installation blocks migration'
 fixture; legacy
 printf '#!/bin/sh\nprintf '\''{"ok":true,"data":{"version":"wrong"}}\\n'\''\n' > "$active/bin/filemanager"
 chmod 755 "$active/bin/filemanager"; printf page > "$active/webroot/index.html"
-if filemanager_ready "$active" "$data" v1.10.0; then exit 1; fi
+if filemanager_ready "$active" "$data" v1.11.0; then exit 1; fi
 [ -f "$old/bin/dupeguard" ]; preserved
 echo 'PASS new backend version failure never retires the old module'
 fixture; legacy; mkdir "$data/lock"; printf 99999999 > "$data/lock/pid"
@@ -50,9 +50,9 @@ filemanager_retire_legacy "$active" "$data"
 [ ! -e "$old" ]; [ ! -e "$data/lock" ]; preserved
 echo 'PASS verified dead-process lock is recovered for native migration'
 fixture; legacy
-printf '#!/bin/sh\nprintf '\''{"ok":true,"data":{"version":"v1.10.0"}}\\n'\''\n' > "$active/bin/filemanager"
+printf '#!/bin/sh\nprintf '\''{"ok":true,"data":{"version":"v1.11.0"}}\\n'\''\n' > "$active/bin/filemanager"
 chmod 755 "$active/bin/filemanager"; printf page > "$active/webroot/index.html"
-filemanager_ready "$active" "$data" v1.10.0
+filemanager_ready "$active" "$data" v1.11.0
 [ "$(head -n 1 "$data/install-status")" = ready ]; [ ! -e "$old" ]; [ -f "$data/legacy-module-dupeguard/bin/dupeguard" ]; preserved
 echo 'PASS readiness callback backs up the old module before reporting ready'
 fixture

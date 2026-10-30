@@ -36,13 +36,13 @@ try{
  globalThis.matchMedia=()=>({matches:false,addEventListener(){}});globalThis.CSS={supports:(_k,v)=>/^#[a-f0-9]{6}([a-f0-9]{2})?$/i.test(v)};
  globalThis.getComputedStyle=()=>({getPropertyValue:k=>hostColors[k.slice(2)]||''});
  globalThis.setTimeout=f=>{timers.set(++timerId,f);return timerId;};globalThis.clearTimeout=id=>timers.delete(id);
- initAppearance();assert.equal(sheets.length,1);assert.equal(get('appearance-retry').hidden,false);
+ initAppearance();assert.equal(sheets.length,1);
  for(let attempt=0;attempt<4;attempt++){sheets.at(-1).onload();if(attempt<3){assert.equal(timers.size,1);const [id,run]=timers.entries().next().value;timers.delete(id);run();}}
  assert.equal(sheets.length,4);assert.equal(timers.size,0);assert.match(get('appearance-status').textContent,/未读取到宿主配色/);assert.equal(get('appearance-scheme').disabled,false);assert.equal(get('accent-palette').children[0].disabled,false);
  console.log('PASS empty host colors retry only three times and keep manual settings usable');
- get('appearance-retry').events.click();hostColors=colors;sheets.at(-1).onload();assert.equal(root.style.values.get('--accent'),colors.primary);assert.equal(get('appearance-scheme').disabled,true);
- console.log('PASS explicit retry accepts newly available host colors');
- const activeSheet=sheets.at(-1);get('appearance-monet').checked=false;get('appearance-monet').events.change();activeSheet.onload();assert.equal(root.style.values.has('--accent'),false);assert.equal(get('appearance-retry').hidden,true);
+ hostColors=colors;document.events.visibilitychange();sheets.at(-1).onload();assert.equal(root.style.values.get('--accent'),colors.primary);assert.equal(get('appearance-scheme').disabled,true);
+ console.log('PASS returning to the page automatically accepts newly available host colors');
+ const activeSheet=sheets.at(-1);get('appearance-monet').checked=false;get('appearance-monet').events.change();activeSheet.onload();assert.equal(root.style.values.has('--accent'),false);
  console.log('PASS disabled Monet ignores stale stylesheet callbacks');
  hostColors={};get('appearance-monet').checked=true;get('appearance-monet').events.change();sheets.at(-1).onerror();assert.equal(timers.size,1);get('appearance-monet').checked=false;get('appearance-monet').events.change();assert.equal(timers.size,0);
  console.log('PASS changing appearance cancels pending host stylesheet retries');

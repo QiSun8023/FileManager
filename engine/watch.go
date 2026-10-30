@@ -102,9 +102,6 @@ func (e *Engine) validateWatch(c WatchConfig) (WatchConfig, error) {
 	if c.StableSeconds < 5 || c.StableSeconds > 3600 {
 		return c, errors.New("稳定等待时间必须为 5–3600 秒")
 	}
-	if c.Enabled && len(c.Rules) == 0 {
-		return c, errors.New("请至少添加一条监控规则")
-	}
 	if len(c.Rules) > 20 {
 		return c, errors.New("最多 20 条监控规则")
 	}
@@ -663,6 +660,19 @@ func (e *Engine) watchDispatch(action string, r Request) (any, error) {
 	switch action {
 	case "watch-config":
 		return e.watchConfig(), nil
+	case "watch-enable":
+		// Change only the persisted master switch, never incomplete editor drafts.
+		var stored WatchConfig
+		if err := read(e.path("watch-config.json"), &stored); err != nil && !os.IsNotExist(err) {
+			return nil, fmt.Errorf("监控配置读取失败：%w", err)
+		}
+		c := e.watchConfig()
+		c.Enabled = r.Checked
+		v, err := e.watchSave(c)
+		if err == nil && c.Enabled {
+			err = e.startWatch()
+		}
+		return v, err
 	case "watch-save":
 		if r.Watch == nil {
 			return nil, errors.New("缺少监控配置")
@@ -692,7 +702,8 @@ func (e *Engine) watchDispatch(action string, r Request) (any, error) {
 		if len(history) > 30 {
 			history = history[:30]
 		}
-		return map[string]any{"enabled": e.watchConfig().Enabled, "running": watchDaemonAlive(e), "updated": s.Updated, "error": s.Error, "items": items, "history": history, "version": version, "helper": e.helperStatus()}, nil
+		c := e.watchConfig()
+		return map[string]any{"enabled": c.Enabled, "rules": len(c.Rules), "running": watchDaemonAlive(e), "updated": s.Updated, "error": s.Error, "items": items, "history": history, "version": version, "helper": e.helperStatus()}, nil
 	case "watch-decide":
 		return e.watchDecide(r)
 	case "watch-start":
@@ -748,9 +759,13 @@ func (e *Engine) watchCopy(src, dst, hash string) (err error) {
 func (e *Engine) helperStatus() string {
 	b, err := os.ReadFile(e.path("helper-status"))
 	if err != nil {
-		return "尚未确认辅助应用安装状态"
+		b = []byte("尚未确认辅助应用安装状态")
 	}
-	return strings.TrimSpace(string(b))
+	status := strings.TrimSpace(string(b))
+	if wake, er := os.ReadFile(e.path("helper-wake-status")); er == nil {
+		status += "\n" + strings.TrimSpace(string(wake))
+	}
+	return status
 }
 
 // Allow uninstall/update to stop large archive/hash checks without deleting source files.
