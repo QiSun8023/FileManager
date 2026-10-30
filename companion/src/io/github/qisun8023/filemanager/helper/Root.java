@@ -7,7 +7,7 @@ import java.util.concurrent.TimeUnit;
 final class Root {
  static final String BIN="/data/adb/modules/filemanager/bin/filemanager";
  static JSONObject call(String action,JSONObject data)throws Exception{
-  if(!action.equals("watch-status")&&!action.equals("watch-decide"))throw new IOException("Unsupported action");
+  if(!action.equals("watch-status")&&!action.equals("watch-start")&&!action.equals("watch-decide"))throw new IOException("Unsupported action");
   String encoded=Base64.encodeToString(data.toString().getBytes(StandardCharsets.UTF_8),Base64.NO_WRAP);
   Process process=new ProcessBuilder("su","-c",BIN+" "+action+" '"+encoded+"'").redirectErrorStream(true).start();
   ByteArrayOutputStream out=new ByteArrayOutputStream();Thread reader=new Thread(()->{try(InputStream in=process.getInputStream()){byte[] b=new byte[4096];int n;while((n=in.read(b))!=-1){if(out.size()+n>8388608){process.destroy();break;}out.write(b,0,n);}}catch(IOException ignored){}});reader.start();

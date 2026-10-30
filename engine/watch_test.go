@@ -2,6 +2,7 @@ package main
 
 import (
 	"archive/zip"
+	"fmt"
 	"os"
 	"path/filepath"
 	"strings"
@@ -209,5 +210,18 @@ func TestWatchMissingDirectoryRetainsBaseline(t *testing.T) {
 	}
 	if len(before) == 0 {
 		t.Fatal("no baseline persisted")
+	}
+}
+
+func TestWatchStatusRejectsForeignPID(t *testing.T) {
+	e, _, _, _ := watchFixture(t)
+	os.MkdirAll(e.path("watch-daemon"), 0700)
+	os.WriteFile(e.path("watch-daemon/pid"), []byte(fmt.Sprint(os.Getpid())), 0600)
+	v, err := e.watchDispatch("watch-status", Request{})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if v.(map[string]any)["running"] != false {
+		t.Fatal("foreign/reused PID advertised as a running monitor")
 	}
 }

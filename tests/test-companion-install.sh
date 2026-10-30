@@ -10,16 +10,22 @@ sed "s#/data/adb#$adb#g" "$project/module/companion-install.sh" > "$test_root/he
 printf QiSun8023/FileManager > "$module/filemanager-origin"
 printf 'fake signed apk for isolated shell test' > "$module/companion.apk"
 sha256sum "$module/companion.apk" | cut -d ' ' -f 1 > "$module/companion.sha256"
+# Android shell command substitution keeps CR; reproduce the shipped Windows checksum.
+python3 - "$module/companion.sha256" <<'PY'
+from pathlib import Path
+import sys
+p=Path(sys.argv[1]);p.write_bytes(p.read_bytes().strip()+b'\r\n')
+PY
 calls=0
 pm() {
  case "$1" in
  path) [ -f "$app/base.apk" ] && printf 'package:%s\n' "$app/base.apk" || true ;;
- install) printf 1 >> "$test_root/install-calls"; [ ! -f "$test_root/reject" ] || return 1; cp -- "${@: -1}" "$app/base.apk"; printf Success ;;
+ install) printf 1 >> "$test_root/install-calls"; [ ! -f "$test_root/reject" ] || return 1; cat > "$app/base.apk"; printf Success ;;
  *) return 1 ;;
  esac
 }
 filemanager_install_companion "$module"
-[ "$(cat "$data/helper-installed-sha256")" = "$(cat "$module/companion.sha256")" ]
+[ "$(cat "$data/helper-installed-sha256")" = "$(tr -d '\r\n' < "$module/companion.sha256")" ]
 [ "$(cat "$test_root/install-calls")" = 1 ]
 printf 'PASS verified helper installs and records exact installed APK hash\n'
 filemanager_install_companion "$module"

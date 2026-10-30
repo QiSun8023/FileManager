@@ -59,6 +59,8 @@ filemanager_uninstall() (
       fm_watch_pid=$(cat "$fm_data/watch-daemon/pid" 2>/dev/null)
       case "$fm_watch_pid" in ''|*[!0-9]*|0) break ;; esac
       kill -0 "$fm_watch_pid" 2>/dev/null || break
+      fm_watch_exe=$(readlink "/proc/$fm_watch_pid/exe" 2>/dev/null)
+      case "$fm_watch_exe" in /data/adb/modules/filemanager/bin/filemanager|"/data/adb/modules/filemanager/bin/filemanager (deleted)"|/data/adb/ksu/hot_install_trash/filemanager.*/bin/filemanager) ;; *) break ;; esac
       [ "$fm_watch_wait" -lt 30 ] || { fm_error "监控检查尚未结束，数据保留。"; exit 1; }
       sleep 1; fm_watch_wait=$((fm_watch_wait+1))
     done

@@ -20,5 +20,5 @@ def main():
  with zipfile.ZipFile(unsigned,'a',compression=zipfile.ZIP_DEFLATED) as z:z.write(dex/'classes.dex','classes.dex')
  aligned=build/'aligned.apk';run([bt/'zipalign.exe','-f','4',unsigned,aligned])
  out=ROOT/'module/companion.apk';run([bt/'apksigner.bat','sign','--ks',keystore,'--ks-pass','file:'+str(pw),'--out',out,aligned]);run([bt/'apksigner.bat','verify','--verbose','--print-certs',out])
- (ROOT/'module/companion.sha256').write_text(hashlib.sha256(out.read_bytes()).hexdigest()+'\n',encoding='ascii');print('Built',out.name)
+ (ROOT/'module/companion.sha256').write_text(hashlib.sha256(out.read_bytes()).hexdigest()+'\n',encoding='ascii',newline='\n');print('Built',out.name)
 if __name__=='__main__':main()

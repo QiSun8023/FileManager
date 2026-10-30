@@ -10,14 +10,15 @@ filemanager_install_companion() (
  fm_helper_package=io.github.qisun8023.filemanager.helper
  fm_helper_apk="$fm_helper_module/companion.apk"
  [ -f "$fm_helper_apk" ] && [ ! -L "$fm_helper_apk" ] || exit 1
- fm_helper_expected=$(cat "$fm_helper_module/companion.sha256")
+ fm_helper_expected=$(tr -d '\r\n' < "$fm_helper_module/companion.sha256")
  fm_helper_actual=$(sha256sum "$fm_helper_apk"); fm_helper_actual=${fm_helper_actual%% *}
  [ "$fm_helper_actual" = "$fm_helper_expected" ] || exit 1
  fm_helper_path=$(pm path "$fm_helper_package" 2>/dev/null | sed -n '1s/^package://p')
  fm_helper_current=''
  if [ -n "$fm_helper_path" ] && [ -f "$fm_helper_path" ]; then fm_helper_current=$(sha256sum "$fm_helper_path"); fm_helper_current=${fm_helper_current%% *}; fi
  if [ "$fm_helper_current" != "$fm_helper_expected" ]; then
-   if ! pm install -r "$fm_helper_apk" > "$fm_helper_data/helper-install.log" 2>&1; then
+   fm_helper_size=$(wc -c < "$fm_helper_apk" | tr -d '[:space:]')
+   if ! cat "$fm_helper_apk" | pm install -r -S "$fm_helper_size" > "$fm_helper_data/helper-install.log" 2>&1; then
      printf '%s\n' '辅助应用安装失败，请查看 helper-install.log；不会自动卸载同包名应用。' > "$fm_helper_data/helper-status"
      exit 1
    fi
@@ -41,6 +42,8 @@ filemanager_start_monitor() (
   fm_watch_pid=$(cat "$fm_watch_data/watch-daemon/pid" 2>/dev/null)
   case "$fm_watch_pid" in ''|*[!0-9]*|0) break ;; esac
   kill -0 "$fm_watch_pid" 2>/dev/null || break
+  fm_watch_exe=$(readlink "/proc/$fm_watch_pid/exe" 2>/dev/null)
+  case "$fm_watch_exe" in "$fm_watch_module/bin/filemanager"|"$fm_watch_module/bin/filemanager (deleted)"|/data/adb/ksu/hot_install_trash/filemanager.*/bin/filemanager) ;; *) break ;; esac
   sleep 1; fm_watch_wait=$((fm_watch_wait+1))
  done
  if [ "$fm_watch_wait" -ge 20 ]; then exit 1; fi

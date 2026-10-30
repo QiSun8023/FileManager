@@ -541,6 +541,12 @@ func (e *Engine) startWatch() error {
 	if err != nil {
 		return err
 	}
+	if !e.watchConfig().Enabled {
+		return nil
+	}
+	if watchDaemonAlive(e) {
+		return nil
+	}
 	cmd := exec.Command(self, "watch-daemon", "e30=")
 	f, err := os.OpenFile(os.DevNull, os.O_RDWR, 0)
 	if err != nil {
@@ -548,15 +554,29 @@ func (e *Engine) startWatch() error {
 	}
 	defer f.Close()
 	cmd.Stdin = f
-	cmd.Stdout = f
-	cmd.Stderr = f
+	log, logErr := os.OpenFile(e.path("watch-daemon.log"), os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0600)
+	if logErr != nil {
+		return logErr
+	}
+	defer log.Close()
+	cmd.Stdout = log
+	cmd.Stderr = log
 	detachWatch(cmd)
 	if err = cmd.Start(); err != nil {
 		return err
 	}
 	return cmd.Process.Release()
 }
-func (e *Engine) watchDaemon() error { return runWatchDaemon(e) }
+
+var errWatchReplaced = errors.New("watch executable replaced")
+
+func (e *Engine) watchDaemon() error {
+	err := runWatchDaemon(e)
+	if errors.Is(err, errWatchReplaced) {
+		return reexecWatch()
+	}
+	return err
+}
 func (e *Engine) watchDispatch(action string, r Request) (any, error) {
 	switch action {
 	case "watch-config":
@@ -589,10 +609,7 @@ func (e *Engine) watchDispatch(action string, r Request) (any, error) {
 		if len(history) > 30 {
 			history = history[:30]
 		}
-		var pid int
-		b, _ := os.ReadFile(e.path("watch-daemon/pid"))
-		fmt.Sscanf(string(b), "%d", &pid)
-		return map[string]any{"enabled": e.watchConfig().Enabled, "running": pid > 0 && alive(pid), "updated": s.Updated, "error": s.Error, "items": items, "history": history, "version": version, "helper": e.helperStatus()}, nil
+		return map[string]any{"enabled": e.watchConfig().Enabled, "running": watchDaemonAlive(e), "updated": s.Updated, "error": s.Error, "items": items, "history": history, "version": version, "helper": e.helperStatus()}, nil
 	case "watch-decide":
 		return e.watchDecide(r)
 	case "watch-start":
